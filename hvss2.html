@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1630">
+<title>HVSS Security Control Center v5 PRO</title>
+<style>
+:root{--nav:#0b1630;--nav2:#12264b;--blue:#175cd3;--blue2:#eaf2ff;--ink:#162033;--muted:#667085;--line:#dfe5ee;--bg:#f4f7fb;--card:#fff;--green:#067647;--greenbg:#dcfae6;--red:#b42318;--redbg:#fee4e2;--amber:#b54708;--amberbg:#fef0c7;--shadow:0 8px 26px rgba(16,24,40,.08)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.app{min-height:100vh}.top{background:linear-gradient(135deg,var(--nav),var(--nav2));color:#fff;padding:16px max(14px,env(safe-area-inset-left)) 12px;position:sticky;top:0;z-index:100;box-shadow:0 5px 20px #0003}.brandrow{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand h1{margin:0;font-size:18px;font-weight:900;letter-spacing:.2px}.brand p{margin:3px 0 0;font-size:11px;color:#c9d5ea}.backup{border:1px solid #ffffff30;background:#ffffff12;color:#fff;border-radius:12px;padding:9px 12px;font-weight:800}.tabs{display:flex;gap:8px;overflow-x:auto;margin-top:13px;padding-bottom:2px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto;border:1px solid #ffffff24;background:#ffffff10;color:#e7edf8;border-radius:13px;padding:10px 14px;font-weight:850}.tab.active{background:#fff;color:#152033}.wrap{max-width:1240px;margin:auto;padding:14px}.page{display:none}.page.active{display:block}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.stat small{font-size:11px;font-weight:850;color:var(--muted)}.stat b{display:block;font-size:27px;margin-top:4px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;margin-top:12px;box-shadow:var(--shadow)}.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.head h2{font-size:17px;margin:0}.muted{color:var(--muted);font-size:12px}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px}.field label{display:block;font-size:11px;font-weight:850;color:#475467;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd7e4;background:#fff;border-radius:11px;padding:10px 11px;color:var(--ink);outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #175cd31c}.field textarea{min-height:70px;resize:vertical}.span2{grid-column:span 2}.span4{grid-column:1/-1}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.btn{border:0;border-radius:11px;padding:10px 13px;font-weight:850}.primary{background:var(--blue);color:#fff}.secondary{background:#eef2f6;color:#172033}.success{background:var(--greenbg);color:var(--green)}.danger{background:var(--redbg);color:var(--red)}.dark{background:#101828;color:#fff}.amber{background:var(--amberbg);color:var(--amber)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0}.toolbar input,.toolbar select{border:1px solid #cfd7e4;border-radius:10px;padding:9px 10px;background:#fff}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.table{width:100%;border-collapse:collapse;min-width:1050px}.table th,.table td{padding:8px 9px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:top}.table th{background:#f7f9fc;font-weight:900;color:#344054;white-space:nowrap}.table tr:last-child td{border-bottom:0}.badge{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900;white-space:nowrap}.in{background:var(--greenbg);color:var(--green)}.out{background:var(--redbg);color:var(--red)}.warn{background:var(--amberbg);color:var(--amber)}.notice{padding:11px 12px;background:var(--blue2);color:#175cd3;border-radius:12px;font-size:12px;margin-top:11px}.empty{text-align:center;padding:28px;color:#98a2b3}.footer{text-align:center;color:#98a2b3;font-size:10px;padding:22px 12px 28px}.reporthead{display:none}.summarygrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.summarybox{border:1px solid var(--line);border-radius:12px;padding:10px}.summarybox small{font-size:9px;color:var(--muted);font-weight:800}.summarybox b{display:block;font-size:20px;margin-top:2px}
+@media(max-width:800px){.stats,.summarygrid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}.span4{grid-column:1/-1}.span2{grid-column:span 1}}
+@media(max-width:520px){.wrap{padding:9px}.stats{gap:8px}.stat{padding:11px}.stat b{font-size:22px}.formgrid{grid-template-columns:1fr}.span2,.span4{grid-column:auto}.card{padding:12px;border-radius:15px}.brand h1{font-size:16px}.top{padding-left:12px;padding-right:12px}}
+@media print{
+ @page{size:A4 landscape;margin:10mm}
+ body{background:#fff!important}.top,.no-print,.footer{display:none!important}.wrap{max-width:none;padding:0}.page{display:none!important}.page.printable{display:block!important}.reporthead{display:block;border-bottom:2px solid #162033;padding-bottom:8px;margin-bottom:10px}.reporthead h1{font-size:18px;margin:0}.reporthead p{margin:3px 0;font-size:10px;color:#667085}.card{box-shadow:none;border:0;padding:0;margin:0 0 10px}.tablewrap{overflow:visible;border:1px solid #cfd7e4}.table{min-width:0;width:100%}.table th,.table td{font-size:8px;padding:5px 4px}.table th{background:#eef2f6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.badge{font-size:7px;padding:2px 4px}.summarybox{border:1px solid #cfd7e4}.summarybox b{font-size:14px}.actions{display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+ <div class="brandrow">
+  <div class="brand"><h1>HVSS SECURITY CONTROL CENTER</h1><p>Visitor Registration • Key Loan Control • Daily Reporting</p></div>
+  <button type="button" class="backup" id="backupBtn">Backup</button>
+ </div>
+ <nav class="tabs" id="tabs">
+  <button type="button" class="tab active" data-page="dashboard">Dashboard</button>
+  <button type="button" class="tab" data-page="visitor">Visit Registration</button>
+  <button type="button" class="tab" data-page="key">Key Loan</button>
+  <button type="button" class="tab" data-page="report">Daily Report</button>
+  <button type="button" class="tab" data-page="history">History</button>
+ </nav>
+</header>
+
+<main class="wrap">
+<section class="page active" id="dashboard">
+ <div class="stats">
+  <div class="stat"><small>VISITOR TODAY</small><b id="sVisit">0</b></div>
+  <div class="stat"><small>VISITOR INSIDE</small><b id="sInside">0</b></div>
+  <div class="stat"><small>KEY OUT</small><b id="sKeyOut">0</b></div>
+  <div class="stat"><small>KEY RETURNED</small><b id="sKeyIn">0</b></div>
+ </div>
+ <div class="card">
+  <div class="head"><div><h2>Operational Summary</h2><div class="muted" id="dashDate"></div></div><button type="button" class="btn primary" id="dashReportBtn">Open Daily Report</button></div>
+  <div class="notice">Entry cukup sekali. Sistem menyimpan seluruh transaksi dan Daily Report akan mengambil semua data pada tanggal yang dipilih, tanpa batas jumlah entry.</div>
+ </div>
+ <div class="card"><div class="head"><h2>Active Key Loans</h2><button type="button" class="btn secondary" id="dashKeyBtn">Open Key Control</button></div><div id="dashKeys"></div></div>
+</section>
+
+<section class="page" id="visitor">
+ <div class="card">
+  <div class="head"><div><h2>Visit Registration — Loading Dock</h2><div class="muted">Expert Entry • unlimited visitor per day</div></div></div>
+  <form id="visitorForm" autocomplete="off">
+   <input type="hidden" id="vEdit">
+   <div class="formgrid">
+    <div class="field"><label>Date *</label><input id="vDate" type="date" required></div>
+    <div class="field"><label>Name *</label><input id="vName" required></div>
+    <div class="field"><label>Company</label><input id="vCompany"></div>
+    <div class="field"><label>No ID Card</label><input id="vId"></div>
+    <div class="field"><label>Time In</label><input id="vIn" type="time"></div>
+    <div class="field"><label>Time Out</label><input id="vOut" type="time"></div>
+    <div class="field"><label>Purpose / Activity</label><input id="vPurpose"></div>
+    <div class="field"><label>Area</label><input id="vArea"></div>
+    <div class="field span2"><label>Remark</label><textarea id="vRemark"></textarea></div>
+   </div>
+   <div class="actions">
+    <button type="submit" class="btn primary" id="vSave">Save Visitor</button>
+    <button type="button" class="btn secondary" id="vInNow">Time In Now</button>
+    <button type="button" class="btn secondary" id="vOutNow">Time Out Now</button>
+    <button type="button" class="btn secondary" id="vReset">Reset</button>
+   </div>
+  </form>
+ </div>
+ <div class="card">
+  <div class="head"><div><h2>Visitor Log</h2><div class="muted" id="vCount"></div></div><div class="actions no-print" style="margin:0"><button type="button" class="btn dark" id="vExcel">Excel</button><button type="button" class="btn primary" id="vPdf">PDF</button></div></div>
+  <div class="toolbar no-print"><input id="vSearch" placeholder="Search name / company / ID"><input id="vFilterDate" type="date"><button type="button" class="btn secondary" id="vToday">Today</button></div>
+  <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>Date</th><th>Name</th><th>Company</th><th>ID Card</th><th>In</th><th>Out</th><th>Purpose</th><th>Area</th><th>Remark</th><th class="no-print">Action</th></tr></thead><tbody id="visitorBody"></tbody></table></div>
+ </div>
+</section>
+
+<section class="page" id="key">
+ <div class="card">
+  <div class="head"><div><h2>Key Loan Control</h2><div class="muted">OUT → Active → IN / Returned</div></div></div>
+  <form id="keyForm" autocomplete="off">
+   <input type="hidden" id="kEdit">
+   <div class="formgrid">
+    <div class="field"><label>Day / Date OUT *</label><input id="kOutDate" type="date" required></div>
+    <div class="field"><label>Jam OUT *</label><input id="kOutTime" type="time" required></div>
+    <div class="field"><label>Nama Peminjam *</label><input id="kBorrower" required></div>
+    <div class="field"><label>Divisi</label><input id="kDivision"></div>
+    <div class="field"><label>Security</label><input id="kSecurity"></div>
+    <div class="field"><label>Nama Kunci *</label><input id="kKeyName" required></div>
+    <div class="field"><label>Key Number</label><input id="kKeyNumber"></div>
+    <div class="field"><label>Remark OUT</label><input id="kRemark"></div>
+    <div class="field"><label>Day / Date IN</label><input id="kInDate" type="date"></div>
+    <div class="field"><label>Jam IN</label><input id="kInTime" type="time"></div>
+    <div class="field"><label>Nama Yang Mengembalikan</label><input id="kReturner"></div>
+    <div class="field"><label>Divisi IN</label><input id="kInDivision"></div>
+    <div class="field"><label>Security IN</label><input id="kInSecurity"></div>
+    <div class="field span2"><label>Keterangan</label><textarea id="kNote"></textarea></div>
+   </div>
+   <div class="actions">
+    <button type="submit" class="btn primary">Save Key Loan</button>
+    <button type="button" class="btn success" id="kReturnLast">Return Active Key</button>
+    <button type="button" class="btn secondary" id="kOutNow">OUT Now</button>
+    <button type="button" class="btn secondary" id="kReset">Reset</button>
+   </div>
+  </form>
+ </div>
+ <div class="card">
+  <div class="head"><div><h2>Key Loan Register</h2><div class="muted" id="kCount"></div></div><div class="actions no-print" style="margin:0"><button type="button" class="btn dark" id="kExcel">Excel</button><button type="button" class="btn primary" id="kPdf">PDF</button></div></div>
+  <div class="toolbar no-print"><input id="kSearch" placeholder="Search borrower / key / division"><select id="kStatus"><option value="">All Status</option><option value="OUT">KEY OUT</option><option value="RETURNED">RETURNED</option></select></div>
+  <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>OUT Date</th><th>OUT</th><th>Peminjam</th><th>Divisi</th><th>Security</th><th>Key</th><th>Number</th><th>IN Date</th><th>IN</th><th>Returner</th><th>Remark</th><th>Status</th><th class="no-print">Action</th></tr></thead><tbody id="keyBody"></tbody></table></div>
+ </div>
+</section>
+
+<section class="page" id="report">
+ <div class="card">
+  <div class="head"><div><h2>Daily Security Report</h2><div class="muted">1×24 jam • seluruh entry pada tanggal terpilih</div></div></div>
+  <div class="toolbar no-print"><input id="reportDate" type="date"><button type="button" class="btn secondary" id="reportToday">Today</button><button type="button" class="btn dark" id="reportExcel">Export Excel</button><button type="button" class="btn primary" id="reportPdf">Export PDF</button></div>
+  <div class="reporthead"><h1>HVSS SECURITY DAILY REPORT</h1><p id="printDate"></p><p>Visitor Registration & Key Loan Control</p></div>
+  <div class="summarygrid">
+   <div class="summarybox"><small>TOTAL VISITOR</small><b id="rVisitors">0</b></div>
+   <div class="summarybox"><small>STILL INSIDE</small><b id="rInside">0</b></div>
+   <div class="summarybox"><small>KEY TRANSACTION</small><b id="rKeys">0</b></div>
+   <div class="summarybox"><small>KEY STILL OUT</small><b id="rKeyOut">0</b></div>
+  </div>
+  <div class="notice no-print">PDF/Excel mengambil seluruh data pada tanggal ini. Tidak ada batas 25/30/100 entry.</div>
+ </div>
+ <div class="card"><h2 style="font-size:15px;margin:0 0 9px">Visitor Activity</h2><div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>Time In</th><th>Time Out</th><th>Name</th><th>Company</th><th>ID Card</th><th>Purpose</th><th>Area</th><th>Remark</th><th>Status</th></tr></thead><tbody id="reportVisitorBody"></tbody></table></div></div>
+ <div class="card"><h2 style="font-size:15px;margin:0 0 9px">Key Control Activity</h2><div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>OUT</th><th>Peminjam</th><th>Divisi</th><th>Security</th><th>Key</th><th>No.</th><th>IN</th><th>Pengembali</th><th>Status</th></tr></thead><tbody id="reportKeyBody"></tbody></table></div></div>
+</section>
+
+<section class="page" id="history">
+ <div class="card"><div class="head"><div><h2>Unified History</h2><div class="muted">Semua aktivitas tersimpan</div></div><div class="actions no-print" style="margin:0"><button type="button" class="btn dark" id="allExcel">Export Excel</button><button type="button" class="btn primary" id="allPdf">Export PDF</button></div></div><div class="tablewrap"><table class="table"><thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Name</th><th>Detail</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
+</section>
+</main>
+<div class="footer">HVSS Security Control Center v5 PRO • Local-first • Professional PDF & XLSX export</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const KEY="HVSS_SCC_V5_PRO";
+let db={visitors:[],keys:[]};
+try{db=JSON.parse(localStorage.getItem(KEY)||'{"visitors":[],"keys":[]}');if(!db.visitors)db.visitors=[];if(!db.keys)db.keys=[]}catch(e){db={visitors:[],keys:[]}}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const now=()=>new Date().toTimeString().slice(0,5);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function go(id){document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.page===id));window.scrollTo(0,0)}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",function(){go(this.dataset.page)}));
+$("backupBtn").onclick=()=>download("HVSS_Security_Backup.json",JSON.stringify(db,null,2),"application/json");
+$("dashReportBtn").onclick=()=>{go("report");$("reportDate").value=today();renderReport()};
+$("dashKeyBtn").onclick=()=>go("key");
+
+function resetVisitor(){ $("visitorForm").reset();$("vEdit").value="";$("vDate").value=today();$("vSave").textContent="Save Visitor"}
+$("vReset").onclick=resetVisitor;$("vInNow").onclick=()=>{$("vIn").value=now()};$("vOutNow").onclick=()=>{$("vOut").value=now()};
+$("vToday").onclick=()=>{$("vFilterDate").value=today();renderVisitors()};
+$("visitorForm").onsubmit=function(e){
+ e.preventDefault();
+ let o={id:$("vEdit").value||uid(),date:$("vDate").value,name:$("vName").value.trim(),company:$("vCompany").value.trim(),idcard:$("vId").value.trim(),timeIn:$("vIn").value,timeOut:$("vOut").value,purpose:$("vPurpose").value.trim(),area:$("vArea").value.trim(),remark:$("vRemark").value.trim()};
+ if(!o.name)return alert("Nama wajib diisi.");
+ let dup=db.visitors.some(x=>x.date===o.date&&o.idcard&&x.idcard===o.idcard&&x.id!==o.id);
+ if(dup&&!confirm("ID Card ini sudah terdaftar pada tanggal tersebut. Simpan sebagai kunjungan baru?"))return;
+ let i=db.visitors.findIndex(x=>x.id===o.id);i>=0?db.visitors[i]=o:db.visitors.push(o);
+ persist();resetVisitor();go("visitor");
+};
+function editVisitor(id){let o=db.visitors.find(x=>x.id===id);if(!o)return;$("vEdit").value=o.id;$("vDate").value=o.date;$("vName").value=o.name;$("vCompany").value=o.company;$("vId").value=o.idcard;$("vIn").value=o.timeIn;$("vOut").value=o.timeOut;$("vPurpose").value=o.purpose;$("vArea").value=o.area;$("vRemark").value=o.remark;$("vSave").textContent="Update Visitor";window.scrollTo(0,0)}
+function delVisitor(id){if(confirm("Hapus visitor ini?")){db.visitors=db.visitors.filter(x=>x.id!==id);persist()}}
+function filteredVisitors(){let q=($("vSearch").value||"").toLowerCase(),d=$("vFilterDate").value||"";return db.visitors.filter(x=>(!d||x.date===d)&&(!q||[x.name,x.company,x.idcard,x.area,x.purpose].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.date+b.timeIn).localeCompare(a.date+a.timeIn))}
+function renderVisitors(){let a=filteredVisitors();$("vCount").textContent=a.length+" record(s)";$("visitorBody").innerHTML=a.length?a.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.date)}</td><td><b>${esc(x.name)}</b></td><td>${esc(x.company)}</td><td>${esc(x.idcard)}</td><td>${esc(x.timeIn)}</td><td>${esc(x.timeOut)}</td><td>${esc(x.purpose)}</td><td>${esc(x.area)}</td><td>${esc(x.remark)}</td><td class="no-print"><button type="button" class="btn secondary" onclick="window.HVSS.editVisitor('${x.id}')">Edit</button> <button type="button" class="btn danger" onclick="window.HVSS.delVisitor('${x.id}')">Delete</button></td></tr>`).join(""):'<tr><td colspan="11" class="empty">Belum ada data visitor.</td></tr>'}
+$("vSearch").oninput=renderVisitors;$("vFilterDate").onchange=renderVisitors;
+
+function resetKey(){$("keyForm").reset();$("kEdit").value="";$("kOutDate").value=today();$("kOutTime").value=now()}
+$("kReset").onclick=resetKey;$("kOutNow").onclick=()=>{$("kOutTime").value=now()};
+$("keyForm").onsubmit=function(e){
+ e.preventDefault();
+ let o={id:$("kEdit").value||uid(),outDate:$("kOutDate").value,outTime:$("kOutTime").value,borrower:$("kBorrower").value.trim(),division:$("kDivision").value.trim(),security:$("kSecurity").value.trim(),keyName:$("kKeyName").value.trim(),keyNumber:$("kKeyNumber").value.trim(),remark:$("kRemark").value.trim(),inDate:$("kInDate").value,inTime:$("kInTime").value,returner:$("kReturner").value.trim(),inDivision:$("kInDivision").value.trim(),inSecurity:$("kInSecurity").value.trim(),note:$("kNote").value.trim()};
+ if(!o.borrower||!o.keyName)return alert("Nama Peminjam dan Nama Kunci wajib diisi.");
+ if(!o.inDate&&o.keyNumber&&db.keys.some(x=>x.keyNumber===o.keyNumber&&!x.inDate&&x.id!==o.id)&&!confirm("Key Number ini masih tercatat OUT. Simpan transaksi baru?"))return;
+ let i=db.keys.findIndex(x=>x.id===o.id);i>=0?db.keys[i]=o:db.keys.push(o);persist();resetKey();go("key");
+};
+function editKey(id){let o=db.keys.find(x=>x.id===id);if(!o)return;let m={kEdit:o.id,kOutDate:o.outDate,kOutTime:o.outTime,kBorrower:o.borrower,kDivision:o.division,kSecurity:o.security,kKeyName:o.keyName,kKeyNumber:o.keyNumber,kRemark:o.remark,kInDate:o.inDate,kInTime:o.inTime,kReturner:o.returner,kInDivision:o.inDivision,kInSecurity:o.inSecurity,kNote:o.note};Object.keys(m).forEach(k=>$(k).value=m[k]||"");window.scrollTo(0,0)}
+function returnKey(id){let o=db.keys.find(x=>x.id===id);if(!o)return;o.inDate=today();o.inTime=now();o.returner=o.returner||o.borrower;persist()}
+$("kReturnLast").onclick=()=>{let a=db.keys.filter(x=>!x.inDate).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));if(!a.length)return alert("Tidak ada key yang sedang OUT.");returnKey(a[0].id)}
+function delKey(id){if(confirm("Hapus transaksi key ini?")){db.keys=db.keys.filter(x=>x.id!==id);persist()}}
+function renderKeys(){let q=($("kSearch").value||"").toLowerCase(),st=$("kStatus").value||"",a=db.keys.filter(x=>(!st||(st==="OUT"?!x.inDate:!!x.inDate))&&(!q||[x.borrower,x.division,x.keyName,x.keyNumber,x.security].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));$("kCount").textContent=a.length+" record(s)";$("keyBody").innerHTML=a.length?a.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.outDate)}</td><td>${esc(x.outTime)}</td><td><b>${esc(x.borrower)}</b></td><td>${esc(x.division)}</td><td>${esc(x.security)}</td><td>${esc(x.keyName)}</td><td>${esc(x.keyNumber)}</td><td>${esc(x.inDate)}</td><td>${esc(x.inTime)}</td><td>${esc(x.returner)}</td><td>${esc(x.note||x.remark)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td><td class="no-print">${x.inDate?"":"<button type='button' class='btn success' onclick=\"window.HVSS.returnKey('"+x.id+"')\">Return</button> "}<button type="button" class="btn secondary" onclick="window.HVSS.editKey('${x.id}')">Edit</button> <button type="button" class="btn danger" onclick="window.HVSS.delKey('${x.id}')">Delete</button></td></tr>`).join(""):'<tr><td colspan="14" class="empty">Belum ada transaksi key.</td></tr>'}
+$("kSearch").oninput=renderKeys;$("kStatus").onchange=renderKeys;
+
+function reportData(){let d=$("reportDate").value||today(),v=db.visitors.filter(x=>x.date===d).sort((a,b)=>(a.timeIn||"99:99").localeCompare(b.timeIn||"99:99")),k=db.keys.filter(x=>x.outDate===d||x.inDate===d).sort((a,b)=>(a.outTime||"99:99").localeCompare(b.outTime||"99:99"));return {d,v,k}}
+function renderReport(){let r=reportData();$("printDate").textContent="Reporting Date: "+r.d;$("rVisitors").textContent=r.v.length;$("rInside").textContent=r.v.filter(x=>x.timeIn&&!x.timeOut).length;$("rKeys").textContent=r.k.length;$("rKeyOut").textContent=r.k.filter(x=>!x.inDate).length;$("reportVisitorBody").innerHTML=r.v.length?r.v.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.timeIn)}</td><td>${esc(x.timeOut)}</td><td>${esc(x.name)}</td><td>${esc(x.company)}</td><td>${esc(x.idcard)}</td><td>${esc(x.purpose)}</td><td>${esc(x.area)}</td><td>${esc(x.remark)}</td><td><span class="badge ${x.timeOut?"in":"out"}">${x.timeOut?"OUT":"INSIDE"}</span></td></tr>`).join(""):'<tr><td colspan="10" class="empty">Tidak ada visitor pada tanggal ini.</td></tr>';$("reportKeyBody").innerHTML=r.k.length?r.k.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.outTime)}</td><td>${esc(x.borrower)}</td><td>${esc(x.division)}</td><td>${esc(x.security)}</td><td>${esc(x.keyName)}</td><td>${esc(x.keyNumber)}</td><td>${esc(x.inTime)}</td><td>${esc(x.returner)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td></tr>`).join(""):'<tr><td colspan="10" class="empty">Tidak ada transaksi key pada tanggal ini.</td></tr>'}
+$("reportDate").value=today();$("reportDate").onchange=renderReport;$("reportToday").onclick=()=>{$("reportDate").value=today();renderReport()};
+
+function renderDashboard(){let d=today(),v=db.visitors.filter(x=>x.date===d),k=db.keys;$("sVisit").textContent=v.length;$("sInside").textContent=v.filter(x=>x.timeIn&&!x.timeOut).length;$("sKeyOut").textContent=k.filter(x=>!x.inDate).length;$("sKeyIn").textContent=k.filter(x=>!!x.inDate).length;$("dashDate").textContent="Today: "+d;let a=k.filter(x=>!x.inDate).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));$("dashKeys").innerHTML=a.length?a.slice(0,12).map(x=>`<div style="padding:9px 0;border-bottom:1px solid var(--line)"><b>${esc(x.keyName)}</b> • ${esc(x.keyNumber)} — ${esc(x.borrower)} <span class="badge out">KEY OUT</span></div>`).join(""):'<div class="empty">Tidak ada key aktif.</div>'}
+function renderHistory(){let a=db.visitors.map(x=>({date:x.date,time:x.timeIn,type:"VISITOR",name:x.name,detail:(x.company||"")+" • "+(x.area||"")})).concat(db.keys.map(x=>({date:x.inDate||x.outDate,time:x.inTime||x.outTime,type:x.inDate?"KEY RETURNED":"KEY OUT",name:x.borrower,detail:x.keyName+" • "+(x.keyNumber||"")}))).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));$("historyBody").innerHTML=a.length?a.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.time)}</td><td>${esc(x.type)}</td><td>${esc(x.name)}</td><td>${esc(x.detail)}</td></tr>`).join(""):'<tr><td colspan="5" class="empty">Belum ada history.</td></tr>'}
+function renderAll(){renderDashboard();renderVisitors();renderKeys();renderReport();renderHistory()}
+
+function download(name,data,type){let blob=new Blob([data],{type:type||"application/octet-stream"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function xml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
+function crc32(str){let table=crc32.t||(crc32.t=(()=>{let t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})());let c=0xffffffff;for(let i=0;i<str.length;i++){let b=str.charCodeAt(i)&255;c=table[(c^b)&255]^(c>>>8)}return (c^0xffffffff)>>>0}
+function u16(n){return String.fromCharCode(n&255,(n>>>8)&255)}function u32(n){return String.fromCharCode(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255)}
+function zipStore(entries){let out="",central="",offset=0;entries.forEach(e=>{let name=e[0],data=e[1],nb=name,db=data,crc=crc32(db),size=db.length;out+="PK\\x03\\x04"+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+String.fromCharCode(crc&255,(crc>>>8)&255,(crc>>>16)&255,(crc>>>24)&255)+u32(size)+u32(size)+u16(nb.length)+u16(0)+nb+db;central+="PK\\x01\\x02"+u16(20)+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+String.fromCharCode(crc&255,(crc>>>8)&255,(crc>>>16)&255,(crc>>>24)&255)+u32(size)+u32(size)+u16(nb.length)+u16(0)+u16(0)+u16(0)+u16(0)+u32(0)+u32(offset)+nb;offset=out.length});return out+central+"PK\\x05\\x06"+u16(0)+u16(0)+u16(entries.length)+u16(entries.length)+u32(central.length)+u32(out.length)+u16(0)}
+function xlsxBlob(sheets){let files=[];let wb=['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>','<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'];sheets.forEach((sh,i)=>wb.push('<sheet name="'+xml(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'));wb.push("</sheets></workbook>");files.push(["[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheets.map((_,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+'</Types>']);files.push(["_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>']);files.push(["xl/workbook.xml",wb.join("")]);files.push(["xl/_rels/workbook.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((_,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")+'</Relationships>']);sheets.forEach((sh,i)=>{let rows=sh.rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>'<c r="'+String.fromCharCode(65+ci)+(ri+1)+'" t="inlineStr"><is><t xml:space="preserve">'+xml(v)+'</t></is></c>').join("")+"</row>").join("");files.push(["xl/worksheets/sheet"+(i+1)+".xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" tabSelected="'+(i===0?1:0)+'"/></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols><col min="1" max="30" width="18" customWidth="1"/></cols><sheetData>'+rows+'</sheetData><autoFilter ref="A1:'+String.fromCharCode(64+Math.max(1,Math.min(26,sh.rows[0]?.length||1)))+sh.rows.length+'"/></worksheet>'])});let raw=zipStore(files),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i)&255;return new Blob([u],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})}
+function makeVisitorRows(date){let a=db.visitors.filter(x=>!date||x.date===date).sort((x,y)=>(x.date+x.timeIn).localeCompare(y.date+y.timeIn));return [["HVSS SECURITY — VISITOR REPORT"],["Reporting Date",date||"ALL"],[],["No","Date","Time In","Time Out","Name","Company","No ID Card","Purpose / Activity","Area","Remark","Status"]].concat(a.map((x,i)=>[i+1,x.date,x.timeIn,x.timeOut,x.name,x.company,x.idcard,x.purpose,x.area,x.remark,x.timeOut?"OUT":"INSIDE"]))}
+function makeKeyRows(date){let a=db.keys.filter(x=>!date||x.outDate===date||x.inDate===date).sort((x,y)=>(x.outDate+x.outTime).localeCompare(y.outDate+y.outTime));return [["HVSS SECURITY — KEY CONTROL REPORT"],["Reporting Date",date||"ALL"],[],["No","OUT Date","Jam OUT","Nama Peminjam","Divisi","Security","Nama Kunci","Key Number","IN Date","Jam IN","Remark","Nama Yang Mengembalikan","Divisi IN","Security IN","Keterangan","Status"]].concat(a.map((x,i)=>[i+1,x.outDate,x.outTime,x.borrower,x.division,x.security,x.keyName,x.keyNumber,x.inDate,x.inTime,x.remark,x.returner,x.inDivision,x.inSecurity,x.note,x.inDate?"RETURNED":"KEY OUT"]))}
+function exportXlsx(rows,name){let blob=xlsxBlob([{name:"Report",rows:rows}]),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+$("vExcel").onclick=()=>exportXlsx(makeVisitorRows($("vFilterDate").value||""),"HVSS_Visitor_Report.xlsx");
+$("kExcel").onclick=()=>exportXlsx(makeKeyRows(""),"HVSS_Key_Control_Report.xlsx");
+$("reportExcel").onclick=()=>{let d=$("reportDate").value;exportXlsx(makeVisitorRows(d),"HVSS_Daily_Visitor_"+d+".xlsx");setTimeout(()=>exportXlsx(makeKeyRows(d),"HVSS_Daily_Key_"+d+".xlsx"),500)}
+$("allExcel").onclick=()=>{exportXlsx(makeVisitorRows(""),"HVSS_All_Visitors.xlsx");setTimeout(()=>exportXlsx(makeKeyRows(""),"HVSS_All_Key_Control.xlsx"),500)}
+
+function printReport(page){document.querySelectorAll(".page").forEach(p=>p.classList.remove("printable"));$(page).classList.add("printable");setTimeout(()=>{window.print();setTimeout(()=>$(page).classList.remove("printable"),800)},50)}
+$("vPdf").onclick=()=>{let d=$("vFilterDate").value||today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>printReport("report"),120)}
+$("kPdf").onclick=()=>{let d=today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>printReport("report"),120)}
+$("reportPdf").onclick=()=>{renderReport();printReport("report")}
+$("allPdf").onclick=()=>printReport("history");
+
+window.HVSS={editVisitor,delVisitor,editKey,returnKey,delKey};
+resetVisitor();resetKey();renderAll();
+})();
+</script>
+</body>
+</html>
