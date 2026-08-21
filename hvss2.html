@@ -238,11 +238,50 @@ $("kExcel").onclick=()=>exportXlsx(makeKeyRows(""),"HVSS_Key_Control_Report.xlsx
 $("reportExcel").onclick=()=>{let d=$("reportDate").value;exportXlsx(makeVisitorRows(d),"HVSS_Daily_Visitor_"+d+".xlsx");setTimeout(()=>exportXlsx(makeKeyRows(d),"HVSS_Daily_Key_"+d+".xlsx"),500)}
 $("allExcel").onclick=()=>{exportXlsx(makeVisitorRows(""),"HVSS_All_Visitors.xlsx");setTimeout(()=>exportXlsx(makeKeyRows(""),"HVSS_All_Key_Control.xlsx"),500)}
 
-function printReport(page){document.querySelectorAll(".page").forEach(p=>p.classList.remove("printable"));$(page).classList.add("printable");setTimeout(()=>{window.print();setTimeout(()=>$(page).classList.remove("printable"),800)},50)}
-$("vPdf").onclick=()=>{let d=$("vFilterDate").value||today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>printReport("report"),120)}
-$("kPdf").onclick=()=>{let d=today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>printReport("report"),120)}
-$("reportPdf").onclick=()=>{renderReport();printReport("report")}
-$("allPdf").onclick=()=>printReport("history");
+function buildPrintableReport(page){
+  const node=$(page);
+  const clone=node.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(x=>x.remove());
+  clone.querySelectorAll(".actions").forEach(x=>x.remove());
+  const title=page==="report"?"HVSS SECURITY DAILY REPORT":"HVSS SECURITY HISTORY";
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+  <style>
+  @page{size:A4 landscape;margin:10mm}
+  body{font-family:Arial,sans-serif;color:#162033;margin:0;font-size:10px}
+  h1{font-size:18px;margin:0 0 5px}h2{font-size:14px;margin:10px 0 6px}
+  .reporthead{display:block!important;border-bottom:2px solid #162033;padding-bottom:8px;margin-bottom:10px}
+  .card{border:0!important;box-shadow:none!important;padding:0!important;margin:0 0 10px!important}
+  .tablewrap{overflow:visible!important;border:1px solid #cfd7e4}
+  table{width:100%;border-collapse:collapse;min-width:0!important}
+  th,td{font-size:8px;padding:5px 4px;border:1px solid #dfe5ee;text-align:left}
+  th{background:#eef2f6}
+  .summarygrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .summarybox{border:1px solid #cfd7e4;padding:8px;border-radius:8px}
+  .summarybox b{display:block;font-size:14px}
+  .footer-credit{text-align:center;color:#ff1f1f;font-weight:900;margin-top:10px}
+  </style></head><body>
+  <div class="reporthead"><h1>${title}</h1><p>${$("printDate")?.textContent||today()}</p><p>Visitor Registration & Key Loan Control</p></div>
+  ${clone.innerHTML}
+  <div class="footer-credit">CREATED BY: Mbah Pri</div>
+  </body></html>`;
+}
+function downloadPdfFallback(page){
+  // On Android/local HTML, window.print() may not expose a direct file download.
+  // Open a clean printable document so Chrome's "Save as PDF" works reliably.
+  const html=buildPrintableReport(page);
+  const w=window.open("","_blank");
+  if(!w){
+    alert("Popup diblokir. Izinkan popup untuk membuka PDF.");
+    return;
+  }
+  w.document.open(); w.document.write(html); w.document.close();
+  setTimeout(()=>{w.focus();w.print()},400);
+}
+function printReport(page){downloadPdfFallback(page)}
+$("vPdf").onclick=()=>{let d=$("vFilterDate").value||today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>downloadPdfFallback("report"),180)}
+$("kPdf").onclick=()=>{let d=today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>downloadPdfFallback("report"),180)}
+$("reportPdf").onclick=()=>{renderReport();downloadPdfFallback("report")}
+$("allPdf").onclick=()=>downloadPdfFallback("history");
 
 window.HVSS={editVisitor,delVisitor,editKey,returnKey,delKey};
 resetVisitor();resetKey();renderAll();
