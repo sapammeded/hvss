@@ -7,13 +7,14 @@
 <title>HVSS Security Control Center v5 PRO</title>
 <style>
 :root{--nav:#0b1630;--nav2:#12264b;--blue:#175cd3;--blue2:#eaf2ff;--ink:#162033;--muted:#667085;--line:#dfe5ee;--bg:#f4f7fb;--card:#fff;--green:#067647;--greenbg:#dcfae6;--red:#b42318;--redbg:#fee4e2;--amber:#b54708;--amberbg:#fef0c7;--shadow:0 8px 26px rgba(16,24,40,.08)}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.app{min-height:100vh}.top{background:linear-gradient(135deg,var(--nav),var(--nav2));color:#fff;padding:16px max(14px,env(safe-area-inset-left)) 12px;position:sticky;top:0;z-index:100;box-shadow:0 5px 20px #0003}.brandrow{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand h1{margin:0;font-size:18px;font-weight:900;letter-spacing:.2px}.brand p{margin:3px 0 0;font-size:11px;color:#c9d5ea}.backup{border:1px solid #ffffff30;background:#ffffff12;color:#fff;border-radius:12px;padding:9px 12px;font-weight:800}.tabs{display:flex;gap:8px;overflow-x:auto;margin-top:13px;padding-bottom:2px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto;border:1px solid #ffffff24;background:#ffffff10;color:#e7edf8;border-radius:13px;padding:10px 14px;font-weight:850}.tab.active{background:#fff;color:#152033}.wrap{max-width:1240px;margin:auto;padding:14px}.page{display:none}.page.active{display:block}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.stat small{font-size:11px;font-weight:850;color:var(--muted)}.stat b{display:block;font-size:27px;margin-top:4px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;margin-top:12px;box-shadow:var(--shadow)}.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.head h2{font-size:17px;margin:0}.muted{color:var(--muted);font-size:12px}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px}.field label{display:block;font-size:11px;font-weight:850;color:#475467;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd7e4;background:#fff;border-radius:11px;padding:10px 11px;color:var(--ink);outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #175cd31c}.field textarea{min-height:70px;resize:vertical}.span2{grid-column:span 2}.span4{grid-column:1/-1}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.btn{border:0;border-radius:11px;padding:10px 13px;font-weight:850}.primary{background:var(--blue);color:#fff}.secondary{background:#eef2f6;color:#172033}.success{background:var(--greenbg);color:var(--green)}.danger{background:var(--redbg);color:var(--red)}.dark{background:#101828;color:#fff}.amber{background:var(--amberbg);color:var(--amber)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0}.toolbar input,.toolbar select{border:1px solid #cfd7e4;border-radius:10px;padding:9px 10px;background:#fff}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.table{width:100%;border-collapse:collapse;min-width:1050px}.table th,.table td{padding:8px 9px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:top}.table th{background:#f7f9fc;font-weight:900;color:#344054;white-space:nowrap}.table tr:last-child td{border-bottom:0}.badge{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900;white-space:nowrap}.in{background:var(--greenbg);color:var(--green)}.out{background:var(--redbg);color:var(--red)}.warn{background:var(--amberbg);color:var(--amber)}.notice{padding:11px 12px;background:var(--blue2);color:#175cd3;border-radius:12px;font-size:12px;margin-top:11px}.empty{text-align:center;padding:28px;color:#98a2b3}.footer{text-align:center;color:#98a2b3;font-size:10px;padding:22px 12px 28px}.reporthead{display:none}.summarygrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.summarybox{border:1px solid var(--line);border-radius:12px;padding:10px}.summarybox small{font-size:9px;color:var(--muted);font-weight:800}.summarybox b{display:block;font-size:20px;margin-top:2px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.app{min-height:100vh}.top{background:linear-gradient(135deg,var(--nav),var(--nav2));color:#fff;padding:16px max(14px,env(safe-area-inset-left)) 12px;position:sticky;top:0;z-index:100;box-shadow:0 5px 20px #0003}.brandrow{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand h1{margin:0;font-size:18px;font-weight:900;letter-spacing:.2px}.brand p{margin:3px 0 0;font-size:11px;color:#c9d5ea}.backup{border:1px solid #ffffff30;background:#ffffff12;color:#fff;border-radius:12px;padding:9px 12px;font-weight:800}.tabs{display:flex;gap:8px;overflow-x:auto;margin-top:13px;padding-bottom:2px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex:0 0 auto;border:1px solid #ffffff24;background:#ffffff10;color:#e7edf8;border-radius:13px;padding:10px 14px;font-weight:850}.tab.active{background:#fff;color:#152033}.wrap{max-width:1240px;margin:auto;padding:14px}.page{display:none}.page.active{display:block}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.stat small{font-size:11px;font-weight:850;color:var(--muted)}.stat b{display:block;font-size:27px;margin-top:4px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;margin-top:12px;box-shadow:var(--shadow)}.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.head h2{font-size:17px;margin:0}.muted{color:var(--muted);font-size:12px}.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px}.field label{display:block;font-size:11px;font-weight:850;color:#475467;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd7e4;background:#fff;border-radius:11px;padding:10px 11px;color:var(--ink);outline:0}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #175cd31c}.field textarea{min-height:70px;resize:vertical}.span2{grid-column:span 2}.span4{grid-column:1/-1}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;border:0;border-radius:11px;padding:10px 13px;font-weight:850}.primary{background:var(--blue);color:#fff}.secondary{background:#eef2f6;color:#172033}.success{background:var(--greenbg);color:var(--green)}.danger{background:var(--redbg);color:var(--red)}.dark{background:#101828;color:#fff}.amber{background:var(--amberbg);color:var(--amber)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0}.toolbar input,.toolbar select{border:1px solid #cfd7e4;border-radius:10px;padding:9px 10px;background:#fff}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.table{width:100%;border-collapse:collapse;min-width:1050px}.table th,.table td{padding:8px 9px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:top}.table th{background:#f7f9fc;font-weight:900;color:#344054;white-space:nowrap}.table tr:last-child td{border-bottom:0}.badge{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900;white-space:nowrap}.in{background:var(--greenbg);color:var(--green)}.out{background:var(--redbg);color:var(--red)}.warn{background:var(--amberbg);color:var(--amber)}.notice{padding:11px 12px;background:var(--blue2);color:#175cd3;border-radius:12px;font-size:12px;margin-top:11px}.empty{text-align:center;padding:28px;color:#98a2b3}.footer{text-align:center;color:#98a2b3;font-size:10px;padding:22px 12px 28px}.reporthead{display:none}.summarygrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.summarybox{border:1px solid var(--line);border-radius:12px;padding:10px}.summarybox small{font-size:9px;color:var(--muted);font-weight:800}.summarybox b{display:block;font-size:20px;margin-top:2px}
 @media(max-width:800px){.stats,.summarygrid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}.span4{grid-column:1/-1}.span2{grid-column:span 1}}
 @media(max-width:520px){.wrap{padding:9px}.stats{gap:8px}.stat{padding:11px}.stat b{font-size:22px}.formgrid{grid-template-columns:1fr}.span2,.span4{grid-column:auto}.card{padding:12px;border-radius:15px}.brand h1{font-size:16px}.top{padding-left:12px;padding-right:12px}}
 @media print{
  @page{size:A4 landscape;margin:10mm}
  body{background:#fff!important}.top,.no-print,.footer{display:none!important}.wrap{max-width:none;padding:0}.page{display:none!important}.page.printable{display:block!important}.reporthead{display:block;border-bottom:2px solid #162033;padding-bottom:8px;margin-bottom:10px}.reporthead h1{font-size:18px;margin:0}.reporthead p{margin:3px 0;font-size:10px;color:#667085}.card{box-shadow:none;border:0;padding:0;margin:0 0 10px}.tablewrap{overflow:visible;border:1px solid #cfd7e4}.table{min-width:0;width:100%}.table th,.table td{font-size:8px;padding:5px 4px}.table th{background:#eef2f6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.badge{font-size:7px;padding:2px 4px}.summarybox{border:1px solid #cfd7e4}.summarybox b{font-size:14px}.actions{display:none!important}
 }
+@media print{#createdByMbahPri{display:none!important}}
 </style>
 
 <style>
@@ -38,7 +39,7 @@
   #createdByMbahPri{position:static;display:block;text-align:center;color:#ff1f1f;animation:none;margin-top:8px}
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script></head>
+</head>
 <body>
 <div class="app">
 <div id="createdByMbahPri">CREATED BY: Mbah Pri</div>
@@ -230,125 +231,19 @@ function crc32(str){let table=crc32.t||(crc32.t=(()=>{let t=[];for(let n=0;n<256
 function u16(n){return String.fromCharCode(n&255,(n>>>8)&255)}function u32(n){return String.fromCharCode(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255)}
 function zipStore(entries){let out="",central="",offset=0;entries.forEach(e=>{let name=e[0],data=e[1],nb=name,db=data,crc=crc32(db),size=db.length;out+="PK\\x03\\x04"+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+String.fromCharCode(crc&255,(crc>>>8)&255,(crc>>>16)&255,(crc>>>24)&255)+u32(size)+u32(size)+u16(nb.length)+u16(0)+nb+db;central+="PK\\x01\\x02"+u16(20)+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+String.fromCharCode(crc&255,(crc>>>8)&255,(crc>>>16)&255,(crc>>>24)&255)+u32(size)+u32(size)+u16(nb.length)+u16(0)+u16(0)+u16(0)+u16(0)+u32(0)+u32(offset)+nb;offset=out.length});return out+central+"PK\\x05\\x06"+u16(0)+u16(0)+u16(entries.length)+u16(entries.length)+u32(central.length)+u32(out.length)+u16(0)}
 function xlsxBlob(sheets){let files=[];let wb=['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>','<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'];sheets.forEach((sh,i)=>wb.push('<sheet name="'+xml(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'));wb.push("</sheets></workbook>");files.push(["[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheets.map((_,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+'</Types>']);files.push(["_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>']);files.push(["xl/workbook.xml",wb.join("")]);files.push(["xl/_rels/workbook.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((_,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")+'</Relationships>']);sheets.forEach((sh,i)=>{let rows=sh.rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>'<c r="'+String.fromCharCode(65+ci)+(ri+1)+'" t="inlineStr"><is><t xml:space="preserve">'+xml(v)+'</t></is></c>').join("")+"</row>").join("");files.push(["xl/worksheets/sheet"+(i+1)+".xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" tabSelected="'+(i===0?1:0)+'"/></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols><col min="1" max="30" width="18" customWidth="1"/></cols><sheetData>'+rows+'</sheetData><autoFilter ref="A1:'+String.fromCharCode(64+Math.max(1,Math.min(26,sh.rows[0]?.length||1)))+sh.rows.length+'"/></worksheet>'])});let raw=zipStore(files),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i)&255;return new Blob([u],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})}
-function makeVisitorRows(date){let a=db.visitors.filter(x=>!date||x.date===date).sort((x,y)=>(x.date+x.timeIn).localeCompare(y.date+y.timeIn));return [["HVSS SECURITY — VISITOR REPORT"],["Reporting Date",date||"ALL"],[],["No","Date","Time In","Time Out","Name","Company","No ID Card","Purpose / Activity","Area","Remark","Status"]].concat(a.map((x,i)=>[i+1,x.date,x.timeIn,x.timeOut,x.name,x.company,x.idcard,x.purpose,x.area,x.remark,x.timeOut?"OUT":"INSIDE"]))}
-function makeKeyRows(date){let a=db.keys.filter(x=>!date||x.outDate===date||x.inDate===date).sort((x,y)=>(x.outDate+x.outTime).localeCompare(y.outDate+y.outTime));return [["HVSS SECURITY — KEY CONTROL REPORT"],["Reporting Date",date||"ALL"],[],["No","OUT Date","Jam OUT","Nama Peminjam","Divisi","Security","Nama Kunci","Key Number","IN Date","Jam IN","Remark","Nama Yang Mengembalikan","Divisi IN","Security IN","Keterangan","Status"]].concat(a.map((x,i)=>[i+1,x.outDate,x.outTime,x.borrower,x.division,x.security,x.keyName,x.keyNumber,x.inDate,x.inTime,x.remark,x.returner,x.inDivision,x.inSecurity,x.note,x.inDate?"RETURNED":"KEY OUT"]))}
-function exportXlsx(rows,name){let blob=xlsxBlob([{name:"Report",rows:rows}]),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function makeVisitorRows(date){let clean=v=>String(v??"").replace(/CREATED\s*BY\s*:?\s*Mbah\s*Pri/ig,"").trim();let a=db.visitors.filter(x=>!date||x.date===date).sort((x,y)=>(x.date+x.timeIn).localeCompare(y.date+y.timeIn));return [["HVSS SECURITY — VISITOR REPORT"],["Reporting Date",date||"ALL"],[],["No","Date","Time In","Time Out","Name","Company","No ID Card","Purpose / Activity","Area","Remark","Status"]].concat(a.map((x,i)=>[i+1,x.date,x.timeIn,x.timeOut,x.name,x.company,x.idcard,x.purpose,x.area,x.remark,x.timeOut?"OUT":"INSIDE"]))}
+function makeKeyRows(date){let clean=v=>String(v??"").replace(/CREATED\s*BY\s*:?\s*Mbah\s*Pri/ig,"").trim();let a=db.keys.filter(x=>!date||x.outDate===date||x.inDate===date).sort((x,y)=>(x.outDate+x.outTime).localeCompare(y.outDate+y.outTime));return [["HVSS SECURITY — KEY CONTROL REPORT"],["Reporting Date",date||"ALL"],[],["No","OUT Date","Jam OUT","Nama Peminjam","Divisi","Security","Nama Kunci","Key Number","IN Date","Jam IN","Remark","Nama Yang Mengembalikan","Divisi IN","Security IN","Keterangan","Status"]].concat(a.map((x,i)=>[i+1,x.outDate,x.outTime,x.borrower,x.division,x.security,x.keyName,x.keyNumber,x.inDate,x.inTime,x.remark,x.returner,x.inDivision,x.inSecurity,x.note,x.inDate?"RETURNED":"KEY OUT"]))}
+function exportXlsx(rows,name){rows=rows.map(r=>r.map(v=>typeof v==="string"?v.replace(/CREATED\s*BY\s*:?\s*Mbah\s*Pri/ig,"").trim():v));let blob=xlsxBlob([{name:"Report",rows:rows}]),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 $("vExcel").onclick=()=>exportXlsx(makeVisitorRows($("vFilterDate").value||""),"HVSS_Visitor_Report.xlsx");
 $("kExcel").onclick=()=>exportXlsx(makeKeyRows(""),"HVSS_Key_Control_Report.xlsx");
 $("reportExcel").onclick=()=>{let d=$("reportDate").value;exportXlsx(makeVisitorRows(d),"HVSS_Daily_Visitor_"+d+".xlsx");setTimeout(()=>exportXlsx(makeKeyRows(d),"HVSS_Daily_Key_"+d+".xlsx"),500)}
 $("allExcel").onclick=()=>{exportXlsx(makeVisitorRows(""),"HVSS_All_Visitors.xlsx");setTimeout(()=>exportXlsx(makeKeyRows(""),"HVSS_All_Key_Control.xlsx"),500)}
 
-function buildPrintableReport(page){
-  const node=$(page);
-  const clone=node.cloneNode(true);
-  clone.querySelectorAll(".no-print").forEach(x=>x.remove());
-  clone.querySelectorAll(".actions").forEach(x=>x.remove());
-  const title=page==="report"?"HVSS SECURITY DAILY REPORT":"HVSS SECURITY HISTORY";
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
-  <style>
-  @page{size:A4 landscape;margin:10mm}
-  body{font-family:Arial,sans-serif;color:#162033;margin:0;font-size:10px}
-  h1{font-size:18px;margin:0 0 5px}h2{font-size:14px;margin:10px 0 6px}
-  .reporthead{display:block!important;border-bottom:2px solid #162033;padding-bottom:8px;margin-bottom:10px}
-  .card{border:0!important;box-shadow:none!important;padding:0!important;margin:0 0 10px!important}
-  .tablewrap{overflow:visible!important;border:1px solid #cfd7e4}
-  table{width:100%;border-collapse:collapse;min-width:0!important}
-  th,td{font-size:8px;padding:5px 4px;border:1px solid #dfe5ee;text-align:left}
-  th{background:#eef2f6}
-  .summarygrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-  .summarybox{border:1px solid #cfd7e4;padding:8px;border-radius:8px}
-  .summarybox b{display:block;font-size:14px}
-  .footer-credit{text-align:center;color:#ff1f1f;font-weight:900;margin-top:10px}
-  </style></head><body>
-  <div class="reporthead"><h1>${title}</h1><p>${$("printDate")?.textContent||today()}</p><p>Visitor Registration & Key Loan Control</p></div>
-  ${clone.innerHTML}
-  <div class="footer-credit">CREATED BY: Mbah Pri</div>
-  </body></html>`;
-}
-function downloadPdfFallback(page){
-  // On Android/local HTML, window.print() may not expose a direct file download.
-  // Open a clean printable document so Chrome's "Save as PDF" works reliably.
-  const html=buildPrintableReport(page);
-  const w=window.open("","_blank");
-  if(!w){
-    alert("Popup diblokir. Izinkan popup untuk membuka PDF.");
-    return;
-  }
-  w.document.open(); w.document.write(html); w.document.close();
-  setTimeout(()=>{w.focus();w.print()},400);
-}
-function hvssPdf(kind){
-  if(!window.jspdf || !window.jspdf.jsPDF){alert("PDF engine belum siap. Refresh lalu coba lagi.");return}
-  const {jsPDF}=window.jspdf, r=reportData(), d=r.d;
-  const landscape = kind!=="history";
-  const doc=new jsPDF({orientation:landscape?"landscape":"portrait",unit:"mm",format:"a4"});
-  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
-  const navy=[15,31,52], blue=[29,78,121], line=[214,222,231], soft=[244,247,250], red=[210,25,35];
-  let pageNo=0;
-  function header(title,subtitle){
-    pageNo++;
-    doc.setFillColor(...navy);doc.rect(0,0,W,24,"F");
-    doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("HVSS SECURITY CONTROL CENTER",12,10);
-    doc.setFontSize(8);doc.setFont("helvetica","normal");doc.text(title,12,16);doc.text(subtitle,W-12,16,{align:"right"});
-    doc.setTextColor(...navy);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text("CREATED BY: Mbah Pri",12,31);
-    doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(90,105,120);doc.text("Official Operational Report • Server/Device record presentation",12,36);
-  }
-  function footer(){
-    doc.setDrawColor(...line);doc.line(12,H-12,W-12,H-12);
-    doc.setFontSize(7);doc.setTextColor(100,110,120);
-    doc.text("HVSS • Security Operations Record",12,H-7);
-    doc.text("Page "+pageNo,W-12,H-7,{align:"right"});
-  }
-  function summary(y){
-    const vals=[["VISITOR",r.v.length],["STILL INSIDE",r.v.filter(x=>x.timeIn&&!x.timeOut).length],["KEY TX",r.k.length],["KEY OUT",r.k.filter(x=>!x.inDate).length]];
-    const gap=4,w=(W-24-gap*3)/4;
-    vals.forEach((v,i)=>{let x=12+i*(w+gap);doc.setFillColor(...soft);doc.setDrawColor(...line);doc.roundedRect(x,y,w,15,2,2,"FD");doc.setTextColor(90,105,120);doc.setFontSize(7);doc.text(v[0],x+4,y+6);doc.setTextColor(...navy);doc.setFont("helvetica","bold");doc.setFontSize(12);doc.text(String(v[1]),x+4,y+12);doc.setFont("helvetica","normal")});
-  }
-  if(kind==="visitor"){
-    header("VISITOR DAILY REPORT","Reporting Date: "+d);
-    summary(42);
-    doc.autoTable({
-      startY:63,
-      head:[["NO","TIME IN","TIME OUT","NAME","COMPANY","ID CARD","PURPOSE","AREA","REMARK","STATUS"]],
-      body:r.v.map((x,i)=>[i+1,x.timeIn||"—",x.timeOut||"—",x.name||"—",x.company||"—",x.idcard||"—",x.purpose||"—",x.area||"—",x.remark||"—",x.timeOut?"OUT":"INSIDE"]),
-      theme:"grid",styles:{font:"helvetica",fontSize:7,cellPadding:2,textColor:[35,45,58],lineColor:line,lineWidth:.25,overflow:"linebreak"},
-      headStyles:{fillColor:blue,textColor:255,fontStyle:"bold",fontSize:7},
-      alternateRowStyles:{fillColor:[249,251,253]},margin:{left:12,right:12,bottom:18},
-      didDrawPage:footer
-    });
-  }else if(kind==="key"){
-    header("KEY CONTROL DAILY REPORT","Reporting Date: "+d);
-    summary(42);
-    doc.autoTable({
-      startY:63,
-      head:[["NO","OUT","PEMINJAM","DIVISI","SECURITY","KEY","NO.","IN","PENGEMBALI","STATUS"]],
-      body:r.k.map((x,i)=>[i+1,x.outTime||"—",x.borrower||"—",x.division||"—",x.security||"—",x.keyName||"—",x.keyNumber||"—",x.inTime||"—",x.returner||"—",x.inDate?"RETURNED":"KEY OUT"]),
-      theme:"grid",styles:{font:"helvetica",fontSize:7,cellPadding:2,textColor:[35,45,58],lineColor:line,lineWidth:.25,overflow:"linebreak"},
-      headStyles:{fillColor:blue,textColor:255,fontStyle:"bold",fontSize:7},
-      alternateRowStyles:{fillColor:[249,251,253]},margin:{left:12,right:12,bottom:18},
-      didDrawPage:footer
-    });
-  }else{
-    const hist=db.visitors.map(x=>({date:x.date,time:x.timeIn,type:"VISITOR",name:x.name,detail:(x.company||"")+" • "+(x.area||"")})).concat(db.keys.map(x=>({date:x.inDate||x.outDate,time:x.inTime||x.outTime,type:x.inDate?"KEY RETURNED":"KEY OUT",name:x.borrower,detail:(x.keyName||"")+" • "+(x.keyNumber||"")}))).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
-    header("UNIFIED SECURITY HISTORY","All recorded activity");
-    doc.autoTable({
-      startY:43,
-      head:[["DATE","TIME","TYPE","NAME","DETAIL"]],
-      body:hist.map(x=>[x.date||"—",x.time||"—",x.type||"—",x.name||"—",x.detail||"—"]),
-      theme:"grid",styles:{font:"helvetica",fontSize:8,cellPadding:2.5,textColor:[35,45,58],lineColor:line,lineWidth:.25,overflow:"linebreak"},
-      headStyles:{fillColor:blue,textColor:255,fontStyle:"bold",fontSize:8},
-      alternateRowStyles:{fillColor:[249,251,253]},margin:{left:12,right:12,bottom:18},
-      didDrawPage:footer
-    });
-  }
-  doc.save("HVSS_"+kind.toUpperCase()+"_REPORT_"+d+".pdf");
-  alert("✓ PDF profesional berhasil di-download.");
-}
-function printReport(page){hvssPdf(page==="history"?"history":page==="key"?"key":"visitor")}
-$("vPdf").onclick=()=>{let d=$("vFilterDate").value||today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>hvssPdf("visitor"),180)}
-$("kPdf").onclick=()=>{let d=today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>hvssPdf("key"),180)}
-$("reportPdf").onclick=()=>{renderReport();hvssPdf("visitor")}
-$("allPdf").onclick=()=>hvssPdf("history");
+function printReport(page){document.querySelectorAll(".page").forEach(p=>p.classList.remove("printable"));const c=$("createdByMbahPri");if(c)c.style.display="none";$(page).classList.add("printable");setTimeout(()=>{window.print();setTimeout(()=>{const c=$("createdByMbahPri");if(c)c.style.display="";$(page).classList.remove("printable")},800)},50)}
+$("vPdf").onclick=()=>{let d=$("vFilterDate").value||today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>printReport("report"),120)}
+$("kPdf").onclick=()=>{let d=today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>printReport("report"),120)}
+$("reportPdf").onclick=()=>{renderReport();printReport("report")}
+$("allPdf").onclick=()=>printReport("history");
 
 window.HVSS={editVisitor,delVisitor,editKey,returnKey,delKey};
 resetVisitor();resetKey();renderAll();
