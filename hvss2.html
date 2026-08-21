@@ -38,7 +38,7 @@
   #createdByMbahPri{position:static;display:block;text-align:center;color:#ff1f1f;animation:none;margin-top:8px}
 }
 </style>
-</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script></head>
 <body>
 <div class="app">
 <div id="createdByMbahPri">CREATED BY: Mbah Pri</div>
@@ -277,11 +277,78 @@ function downloadPdfFallback(page){
   w.document.open(); w.document.write(html); w.document.close();
   setTimeout(()=>{w.focus();w.print()},400);
 }
-function printReport(page){downloadPdfFallback(page)}
-$("vPdf").onclick=()=>{let d=$("vFilterDate").value||today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>downloadPdfFallback("report"),180)}
-$("kPdf").onclick=()=>{let d=today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>downloadPdfFallback("report"),180)}
-$("reportPdf").onclick=()=>{renderReport();downloadPdfFallback("report")}
-$("allPdf").onclick=()=>downloadPdfFallback("history");
+function hvssPdf(kind){
+  if(!window.jspdf || !window.jspdf.jsPDF){alert("PDF engine belum siap. Refresh lalu coba lagi.");return}
+  const {jsPDF}=window.jspdf, r=reportData(), d=r.d;
+  const landscape = kind!=="history";
+  const doc=new jsPDF({orientation:landscape?"landscape":"portrait",unit:"mm",format:"a4"});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+  const navy=[15,31,52], blue=[29,78,121], line=[214,222,231], soft=[244,247,250], red=[210,25,35];
+  let pageNo=0;
+  function header(title,subtitle){
+    pageNo++;
+    doc.setFillColor(...navy);doc.rect(0,0,W,24,"F");
+    doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("HVSS SECURITY CONTROL CENTER",12,10);
+    doc.setFontSize(8);doc.setFont("helvetica","normal");doc.text(title,12,16);doc.text(subtitle,W-12,16,{align:"right"});
+    doc.setTextColor(...navy);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text("CREATED BY: Mbah Pri",12,31);
+    doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(90,105,120);doc.text("Official Operational Report • Server/Device record presentation",12,36);
+  }
+  function footer(){
+    doc.setDrawColor(...line);doc.line(12,H-12,W-12,H-12);
+    doc.setFontSize(7);doc.setTextColor(100,110,120);
+    doc.text("HVSS • Security Operations Record",12,H-7);
+    doc.text("Page "+pageNo,W-12,H-7,{align:"right"});
+  }
+  function summary(y){
+    const vals=[["VISITOR",r.v.length],["STILL INSIDE",r.v.filter(x=>x.timeIn&&!x.timeOut).length],["KEY TX",r.k.length],["KEY OUT",r.k.filter(x=>!x.inDate).length]];
+    const gap=4,w=(W-24-gap*3)/4;
+    vals.forEach((v,i)=>{let x=12+i*(w+gap);doc.setFillColor(...soft);doc.setDrawColor(...line);doc.roundedRect(x,y,w,15,2,2,"FD");doc.setTextColor(90,105,120);doc.setFontSize(7);doc.text(v[0],x+4,y+6);doc.setTextColor(...navy);doc.setFont("helvetica","bold");doc.setFontSize(12);doc.text(String(v[1]),x+4,y+12);doc.setFont("helvetica","normal")});
+  }
+  if(kind==="visitor"){
+    header("VISITOR DAILY REPORT","Reporting Date: "+d);
+    summary(42);
+    doc.autoTable({
+      startY:63,
+      head:[["NO","TIME IN","TIME OUT","NAME","COMPANY","ID CARD","PURPOSE","AREA","REMARK","STATUS"]],
+      body:r.v.map((x,i)=>[i+1,x.timeIn||"—",x.timeOut||"—",x.name||"—",x.company||"—",x.idcard||"—",x.purpose||"—",x.area||"—",x.remark||"—",x.timeOut?"OUT":"INSIDE"]),
+      theme:"grid",styles:{font:"helvetica",fontSize:7,cellPadding:2,textColor:[35,45,58],lineColor:line,lineWidth:.25,overflow:"linebreak"},
+      headStyles:{fillColor:blue,textColor:255,fontStyle:"bold",fontSize:7},
+      alternateRowStyles:{fillColor:[249,251,253]},margin:{left:12,right:12,bottom:18},
+      didDrawPage:footer
+    });
+  }else if(kind==="key"){
+    header("KEY CONTROL DAILY REPORT","Reporting Date: "+d);
+    summary(42);
+    doc.autoTable({
+      startY:63,
+      head:[["NO","OUT","PEMINJAM","DIVISI","SECURITY","KEY","NO.","IN","PENGEMBALI","STATUS"]],
+      body:r.k.map((x,i)=>[i+1,x.outTime||"—",x.borrower||"—",x.division||"—",x.security||"—",x.keyName||"—",x.keyNumber||"—",x.inTime||"—",x.returner||"—",x.inDate?"RETURNED":"KEY OUT"]),
+      theme:"grid",styles:{font:"helvetica",fontSize:7,cellPadding:2,textColor:[35,45,58],lineColor:line,lineWidth:.25,overflow:"linebreak"},
+      headStyles:{fillColor:blue,textColor:255,fontStyle:"bold",fontSize:7},
+      alternateRowStyles:{fillColor:[249,251,253]},margin:{left:12,right:12,bottom:18},
+      didDrawPage:footer
+    });
+  }else{
+    const hist=db.visitors.map(x=>({date:x.date,time:x.timeIn,type:"VISITOR",name:x.name,detail:(x.company||"")+" • "+(x.area||"")})).concat(db.keys.map(x=>({date:x.inDate||x.outDate,time:x.inTime||x.outTime,type:x.inDate?"KEY RETURNED":"KEY OUT",name:x.borrower,detail:(x.keyName||"")+" • "+(x.keyNumber||"")}))).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+    header("UNIFIED SECURITY HISTORY","All recorded activity");
+    doc.autoTable({
+      startY:43,
+      head:[["DATE","TIME","TYPE","NAME","DETAIL"]],
+      body:hist.map(x=>[x.date||"—",x.time||"—",x.type||"—",x.name||"—",x.detail||"—"]),
+      theme:"grid",styles:{font:"helvetica",fontSize:8,cellPadding:2.5,textColor:[35,45,58],lineColor:line,lineWidth:.25,overflow:"linebreak"},
+      headStyles:{fillColor:blue,textColor:255,fontStyle:"bold",fontSize:8},
+      alternateRowStyles:{fillColor:[249,251,253]},margin:{left:12,right:12,bottom:18},
+      didDrawPage:footer
+    });
+  }
+  doc.save("HVSS_"+kind.toUpperCase()+"_REPORT_"+d+".pdf");
+  alert("✓ PDF profesional berhasil di-download.");
+}
+function printReport(page){hvssPdf(page==="history"?"history":page==="key"?"key":"visitor")}
+$("vPdf").onclick=()=>{let d=$("vFilterDate").value||today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>hvssPdf("visitor"),180)}
+$("kPdf").onclick=()=>{let d=today();$("reportDate").value=d;renderReport();go("report");setTimeout(()=>hvssPdf("key"),180)}
+$("reportPdf").onclick=()=>{renderReport();hvssPdf("visitor")}
+$("allPdf").onclick=()=>hvssPdf("history");
 
 window.HVSS={editVisitor,delVisitor,editKey,returnKey,delKey};
 resetVisitor();resetKey();renderAll();
