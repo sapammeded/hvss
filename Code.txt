@@ -1,0 +1,286 @@
+/**
+ * HVSS V7 — OPERATIONAL CORE
+ * CREATED BY: Mbah Pri
+ * Central Spreadsheet ID fixed to the user's supplied spreadsheet.
+ *
+ * Sheets:
+ * VISITOR_MASTER
+ * KEY_MASTER
+ * VISITOR_LOG
+ * KEY_LOG
+ * AUDIT_LOG
+ * SETTINGS
+ *
+ * Existing sheets are preserved; setup only creates missing sheets.
+ */
+
+const HVSS = {
+  SPREADSHEET_ID: '1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA',
+  TZ: 'Asia/Jakarta',
+  VERSION: '7.0',
+  CREATED_BY: 'Mbah Pri'
+};
+
+const HEADERS = {
+  VISITOR_MASTER: ['Visitor ID','Nama','Perusahaan','Jabatan','No. Identitas','Telepon','Status','Created At','Updated At'],
+  KEY_MASTER: ['Key ID','Nama Kunci','Area','Status','Current Holder','Current Transaction ID','Created At','Updated At'],
+  VISITOR_LOG: ['Transaction ID','Visitor ID','Nama','Perusahaan','Jabatan','Area','Check In','Check Out','Status','Device ID','Server Timestamp','Keterangan'],
+  KEY_LOG: ['Transaction ID','Key ID','Nama Kunci','Area','Borrower','Key Out','Key Return','Status','Device ID','Server Timestamp','Keterangan'],
+  AUDIT_LOG: ['Audit ID','Server Timestamp','Created By','Device ID','Action','Entity','Entity ID','Result','Before','After','Detail'],
+  SETTINGS: ['Setting','Value']
+};
+
+function ss_(){ return SpreadsheetApp.openById(HVSS.SPREADSHEET_ID); }
+function now_(){
+  const d=new Date();
+  return {
+    date:d,
+    ts:Utilities.formatDate(d,HVSS.TZ,'yyyy-MM-dd HH:mm:ss'),
+    day:Utilities.formatDate(d,HVSS.TZ,'dd/MM/yyyy'),
+    time:Utilities.formatDate(d,HVSS.TZ,'HH:mm:ss'),
+    ym:Utilities.formatDate(d,HVSS.TZ,'yyyyMM')
+  };
+}
+function id_(prefix){
+  const n=now_();
+  return prefix+'-'+n.ym+'-'+Utilities.getUuid().slice(0,8).toUpperCase();
+}
+function norm_(v){return String(v??'').trim().toUpperCase().replace(/\s+/g,' ');}
+function sh_(name){
+  const ss=ss_();
+  let s=ss.getSheetByName(name);
+  if(!s)s=ss.insertSheet(name);
+  return s;
+}
+function ensure_(){
+  Object.keys(HEADERS).forEach(name=>{
+    const s=sh_(name);
+    const h=HEADERS[name];
+    s.getRange(1,1,1,h.length).setValues([h]);
+    s.setFrozenRows(1);
+  });
+}
+function json_(callback,obj){
+  const s=JSON.stringify(obj);
+  if(callback){
+    const c=String(callback).replace(/[^\w.$]/g,'');
+    return ContentService.createTextOutput(c+'('+s+');').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(s).setMimeType(ContentService.MimeType.JSON);
+}
+function ok_(data){return {ok:true,data:data};}
+function fail_(message){return {ok:false,message:String(message)};}
+
+function doGet(e){
+  try{
+    ensure_();
+    const p=(e&&e.parameter)||{};
+    return json_(p.callback,route_(String(p.action||'health'),p));
+  }catch(err){
+    const p=(e&&e.parameter)||{};
+    return json_(p.callback,fail_(err.message||err));
+  }
+}
+
+function rows_(sheetName){
+  const s=sh_(sheetName),n=s.getLastRow(),m=s.getLastColumn();
+  if(n<2)return[];
+  return s.getRange(2,1,n-1,m).getValues();
+}
+
+function recordAudit_(action,entity,entityId,result,before,after,detail,device){
+  const s=sh_('AUDIT_LOG'),n=now_();
+  s.getRange(s.getLastRow()+1,1,1,11).setValues([[
+    id_('AUD'),n.ts,HVSS.CREATED_BY,String(device||'Unknown'),action,entity,String(entityId||''),
+    result,JSON.stringify(before||{}),JSON.stringify(after||{}),String(detail||'')
+  ]]);
+}
+
+function device_(p){return String(p.deviceId||'Unknown Device');}
+
+/* ---------- MASTER ---------- */
+
+function findVisitor_(idOrName){
+  const q=norm_(idOrName);
+  return rows_('VISITOR_MASTER').map((r,i)=>({
+    row:i+2,id:String(r[0]||''),name:String(r[1]||''),company:String(r[2]||''),
+    position:String(r[3]||''),identity:String(r[4]||''),phone:String(r[5]||''),
+    status:String(r[6]||'ACTIVE'),createdAt:String(r[7]||''),updatedAt:String(r[8]||'')
+  })).filter(v=>q && (norm_(v.id).includes(q)||norm_(v.name).includes(q)||norm_(v.identity).includes(q))).slice(0,50);
+}
+function saveVisitor_(p){
+  const name=String(p.name||'').trim();
+  if(!name)throw Error('Nama visitor wajib diisi.');
+  const id=String(p.visitorId||'').trim() || id_('VIS');
+  const s=sh_('VISITOR_MASTER'), all=findVisitor_(id);
+  const n=now_();
+  const row=[id,name,String(p.company||''),String(p.position||''),String(p.identity||''),String(p.phone||''),'ACTIVE',n.ts,n.ts];
+  const exact=rows_('VISITOR_MASTER').map((r,i)=>({r,i:i+2})).find(x=>norm_(x.r[0])===norm_(id));
+  if(exact){
+    const before=s.getRange(exact.i,1,1,9).getValues()[0];
+    s.getRange(exact.i,1,1,9).setValues([row]);
+    recordAudit_('UPDATE','VISITOR',id,'SUCCESS',before,row,'Visitor master updated',device_(p));
+    return ok_({mode:'updated',visitor:row});
+  }
+  s.getRange(s.getLastRow()+1,1,1,9).setValues([row]);
+  recordAudit_('CREATE','VISITOR',id,'SUCCESS',{},row,'Visitor master created',device_(p));
+  return ok_({mode:'created',visitor:row});
+}
+
+/* ---------- VISITOR STATE ---------- */
+
+function visitorState_(visitorId){
+  const id=norm_(visitorId), latest={};
+  rows_('VISITOR_LOG').forEach((r,i)=>{
+    if(norm_(r[1])===id){
+      latest.row=i+2; latest.id=r[0]; latest.visitorId=r[1]; latest.name=r[2];
+      latest.company=r[3]; latest.position=r[4]; latest.area=r[5];
+      latest.in=r[6]; latest.out=r[7]; latest.status=r[8]; latest.device=r[9];
+    }
+  });
+  return latest.status==='INSIDE' ? latest : null;
+}
+function visitorCheck_(p){
+  const id=String(p.visitorId||'').trim();
+  if(!id)throw Error('Visitor ID kosong.');
+  const action=String(p.action||'').toUpperCase();
+  if(!['IN','OUT'].includes(action))throw Error('Action harus IN atau OUT.');
+  const lock=LockService.getScriptLock();lock.waitLock(15000);
+  try{
+    const master=findVisitor_(id)[0] || findVisitor_(p.name||'')[0];
+    if(!master)throw Error('Visitor belum terdaftar di MASTER.');
+    const active=visitorState_(master.id);
+    const n=now_(),s=sh_('VISITOR_LOG');
+    if(action==='IN' && active)throw Error('Visitor masih INSIDE. CHECK-OUT terlebih dahulu.');
+    if(action==='OUT' && !active)throw Error('Tidak ada CHECK-IN aktif untuk visitor ini.');
+    if(action==='IN'){
+      const tx=id_('VIS');
+      s.getRange(s.getLastRow()+1,1,1,12).setValues([[
+        tx,master.id,master.name,master.company,master.position,String(p.area||''),
+        n.ts,'','INSIDE',device_(p),n.ts,String(p.notes||'')
+      ]]);
+      recordAudit_('CHECK-IN','VISITOR',master.id,'SUCCESS',{},{
+        transactionId:tx,status:'INSIDE'
+      },'Visitor checked in',device_(p));
+      return ok_({transactionId:tx,status:'INSIDE',serverTimestamp:n.ts,visitor:master,createdBy:HVSS.CREATED_BY});
+    }
+    s.getRange(active.row,8).setValue(n.ts);
+    s.getRange(active.row,9).setValue('OUTSIDE');
+    if(String(p.notes||'').trim())s.getRange(active.row,12).setValue(String(p.notes));
+    recordAudit_('CHECK-OUT','VISITOR',master.id,'SUCCESS',{transactionId:active.id,status:'INSIDE'},{
+      transactionId:active.id,status:'OUTSIDE',checkOut:n.ts
+    },'Visitor checked out',device_(p));
+    return ok_({transactionId:active.id,status:'OUTSIDE',serverTimestamp:n.ts,visitor:master,createdBy:HVSS.CREATED_BY});
+  }finally{lock.releaseLock();}
+}
+
+/* ---------- KEY STATE ---------- */
+
+function keyRows_(){
+  return rows_('KEY_MASTER').map((r,i)=>({
+    row:i+2,id:String(r[0]||''),name:String(r[1]||''),area:String(r[2]||''),
+    status:String(r[3]||'AVAILABLE'),holder:String(r[4]||''),tx:String(r[5]||''),
+    createdAt:String(r[6]||''),updatedAt:String(r[7]||'')
+  }));
+}
+function saveKey_(p){
+  const name=String(p.name||'').trim(),area=String(p.area||'').trim();
+  if(!name)throw Error('Nama kunci wajib diisi.');
+  const id=String(p.keyId||'').trim()||id_('KEY'),s=sh_('KEY_MASTER'),n=now_();
+  const old=keyRows_().find(x=>norm_(x.id)===norm_(id));
+  const row=[id,name,area,old?old.status:'AVAILABLE',old?old.holder:'',old?old.tx:'',old?old.createdAt:n.ts,n.ts];
+  if(old){
+    const before=s.getRange(old.row,1,1,8).getValues()[0];
+    s.getRange(old.row,1,1,8).setValues([row]);
+    recordAudit_('UPDATE','KEY',id,'SUCCESS',before,row,'Key master updated',device_(p));
+    return ok_({mode:'updated',key:row});
+  }
+  s.getRange(s.getLastRow()+1,1,1,8).setValues([row]);
+  recordAudit_('CREATE','KEY',id,'SUCCESS',{},row,'Key master created',device_(p));
+  return ok_({mode:'created',key:row});
+}
+function keyAction_(p){
+  const id=String(p.keyId||'').trim(),action=String(p.action||'').toUpperCase();
+  if(!id||!['OUT','RETURN'].includes(action))throw Error('Key ID dan action wajib.');
+  const lock=LockService.getScriptLock();lock.waitLock(15000);
+  try{
+    const s=sh_('KEY_MASTER'),k=keyRows_().find(x=>norm_(x.id)===norm_(id));
+    if(!k)throw Error('Kunci tidak ditemukan.');
+    const n=now_(),log=sh_('KEY_LOG');
+    if(action==='OUT'){
+      if(k.status==='OUT')throw Error('Kunci sedang dipinjam. RETURN terlebih dahulu.');
+      const tx=id_('KEY'),borrower=String(p.borrower||'').trim();
+      if(!borrower)throw Error('Nama peminjam wajib.');
+      s.getRange(k.row,4,1,3).setValues([['OUT',borrower,tx]]);
+      log.getRange(log.getLastRow()+1,1,1,11).setValues([[
+        tx,k.id,k.name,k.area,borrower,n.ts,'','OUT',device_(p),n.ts,String(p.notes||'')
+      ]]);
+      recordAudit_('KEY OUT','KEY',k.id,'SUCCESS',{status:'AVAILABLE'},{status:'OUT',holder:borrower,transactionId:tx},'Key borrowed',device_(p));
+      return ok_({transactionId:tx,status:'OUT',serverTimestamp:n.ts,key:k});
+    }
+    if(k.status!=='OUT')throw Error('Kunci tidak sedang dipinjam.');
+    const tx=k.tx;
+    s.getRange(k.row,4,1,3).setValues([['AVAILABLE','','']]);
+    const data=rows_('KEY_LOG'), idx=data.findIndex(r=>String(r[0])===tx);
+    if(idx>=0){log.getRange(idx+2,7).setValue(n.ts);log.getRange(idx+2,8).setValue('RETURN');}
+    recordAudit_('KEY RETURN','KEY',k.id,'SUCCESS',{status:'OUT',holder:k.holder,transactionId:tx},{status:'AVAILABLE'},'Key returned',device_(p));
+    return ok_({transactionId:tx,status:'AVAILABLE',serverTimestamp:n.ts,key:k});
+  }finally{lock.releaseLock();}
+}
+
+/* ---------- CURRENT / REPORT / AUDIT ---------- */
+
+function currentVisitors_(){
+  return rows_('VISITOR_LOG').map((r,i)=>({row:i+2,id:String(r[0]||''),visitorId:String(r[1]||''),name:String(r[2]||''),company:String(r[3]||''),position:String(r[4]||''),area:String(r[5]||''),inTime:String(r[6]||''),outTime:String(r[7]||''),status:String(r[8]||'')})).filter(x=>x.status==='INSIDE');
+}
+function currentKeys_(){return keyRows_().filter(x=>x.status==='OUT');}
+function auditEvents_(p){
+  const q=norm_(p.q||''),a=rows_('AUDIT_LOG').map(r=>({id:r[0],timestamp:r[1],createdBy:r[2],device:r[3],action:r[4],entity:r[5],entityId:r[6],result:r[7],before:r[8],after:r[9],detail:r[10]}));
+  return ok_({events:a.filter(x=>!q||norm_([x.action,x.entity,x.entityId,x.detail].join(' ')).includes(q)).reverse().slice(0,500),createdBy:HVSS.CREATED_BY});
+}
+function report_(p){
+  const y=String(p.year||now_().ym.slice(0,4)),m=String(p.month||'ALL');
+  const rows=rows_('VISITOR_LOG').map(r=>({transactionId:r[0],visitorId:r[1],name:r[2],company:r[3],position:r[4],area:r[5],checkIn:r[6],checkOut:r[7],status:r[8],device:r[9],serverTimestamp:r[10],notes:r[11]}));
+  const out=rows.filter(r=>String(r.checkIn).slice(0,4)===y&&(m==='ALL'||String(r.checkIn).slice(5,7)===String(m).padStart(2,'0')));
+  return ok_({rows:out,createdBy:HVSS.CREATED_BY});
+}
+
+/* ---------- HEALTH / ROUTER ---------- */
+function dashboard_(){
+  return ok_({
+    version:HVSS.VERSION,createdBy:HVSS.CREATED_BY,
+    visitorsInside:currentVisitors_().length,
+    keysOut:currentKeys_().length,
+    visitorTransactions:rows_('VISITOR_LOG').length,
+    keyTransactions:rows_('KEY_LOG').length,
+    auditEvents:rows_('AUDIT_LOG').length,
+    timestamp:now_().ts
+  });
+}
+function health_(){
+  ensure_();
+  return ok_({
+    system:'HVSS',status:'ONLINE',version:HVSS.VERSION,
+    createdBy:HVSS.CREATED_BY,timestamp:now_().ts,
+    spreadsheetId:HVSS.SPREADSHEET_ID,
+    sheets:Object.keys(HEADERS)
+  });
+}
+function route_(a,p){
+  switch(a){
+    case'health':return health_();
+    case'dashboard':return dashboard_();
+    case'visitorSearch':return ok_({found:findVisitor_(p.q||'')});
+    case'visitorSave':return saveVisitor_(p);
+    case'visitorAccess':return visitorCheck_(p);
+    case'keyList':return ok_({keys:keyRows_()});
+    case'keySave':return saveKey_(p);
+    case'keyAction':return keyAction_(p);
+    case'currentVisitors':return ok_(currentVisitors_());
+    case'currentKeys':return ok_(currentKeys_());
+    case'audit':return auditEvents_(p);
+    case'report':return report_(p);
+    default:throw Error('Action tidak dikenal: '+a);
+  }
+}
+function setupHVSS(){return health_();}
