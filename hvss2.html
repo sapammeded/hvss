@@ -53,7 +53,7 @@ window.HVSS_CENTRAL_CONFIG = {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script id="HVSS_CENTRAL_CONFIG">
 window.HVSS_CENTRAL = {
   spreadsheetId: "1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA",
-  gasUrl: "https://script.google.com/macros/s/AKfycbxAX1Tfpg-LBpctBmWATVSDAtXFTtp712Mt6-PW8JTeLfa90UKR-c_HZP5plRfzAaZPHA/exec",
+  gasUrl: "https://script.google.com/macros/s/AKfycbyv9ILqh7T38jOtPuT_0S4MEEuPLvoUQM5-idBaDTK5XVN4kUwxomhjT3CNlQ9tGZ6zDw/exec",
   visitorSheet: "Visitor Registration",
   keySheet: "Key Loan"
 };
@@ -175,16 +175,23 @@ Citra Dewi | ID003"></textarea></div>
  </div>
  <div class="card">
   <div class="head"><div><h2>Bulk Key Loan Entry</h2><div class="muted">Banyak peminjam / key sekaligus dengan data OUT yang sama</div></div></div>
-  <div class="notice">Isi tanggal, jam, divisi dan security sekali. Masukkan <b>1 transaksi per baris</b>. Remark OUT di atas berlaku untuk semua transaksi batch. Format: <b>Nama Peminjam | Nama Kunci | Key Number</b>.</div>
+  <div class="notice">Isi tanggal, jam, peminjam, divisi dan security sekali. Satu orang bisa langsung memasukkan 10+ key tanpa mengulang nama. <b>1 key per baris</b>. Format utama: <b>Nama Kunci | Key Number | Remark</b>. Jika borrower berbeda, gunakan <b>Nama Peminjam | Nama Kunci | Key Number | Remark</b>. Remark per baris mengalahkan Remark Default.</div>
   <div class="formgrid">
    <div class="field"><label>Date OUT *</label><input id="bkDate" type="date"></div>
    <div class="field"><label>Jam OUT *</label><input id="bkTime" type="time"></div>
+   <div class="field"><label>Nama Peminjam (bisa 10+ key)</label><input id="bkBorrower" placeholder="Contoh: Andi Saputra"></div>
    <div class="field"><label>Divisi</label><input id="bkDivision"></div>
    <div class="field"><label>Security</label><input id="bkSecurity"></div>
-   <div class="field span2"><label>Remark OUT</label><textarea id="bkRemark" rows="2" placeholder="Contoh: Dipinjam untuk maintenance / pekerjaan area"></textarea></div>
-   <div class="field span2"><label>Nama Peminjam | Nama Kunci | Key Number</label><textarea id="bkLines" rows="7" placeholder="Andi | Master Key | K-001
-Budi | Server Room | K-002
-Citra | Office | K-003"></textarea></div>
+   <div class="field span2"><label>Remark OUT Default (opsional)</label><textarea id="bkRemark" rows="2" placeholder="Dipakai untuk semua baris jika remark per baris kosong"></textarea></div>
+   <div class="field span2"><label>Daftar Key — 1 key per baris</label><textarea id="bkLines" rows="9" placeholder="Format utama (peminjam di atas):
+Master Key | K-001 | Remark 1
+Server Room | K-002 | Remark 2
+Control Room | K-003 | Remark 3
+
+Boleh juga campur borrower per baris:
+Andi | Master Key | K-001 | Remark 1
+Andi | Server Room | K-002 | Remark 2
+Budi | Office | K-003 | Remark 3"></textarea></div>
   </div>
   <div class="actions"><button type="button" class="btn success" id="bkAdd">+ ADD BULK KEY LOANS</button><button type="button" class="btn secondary" id="bkReset">Reset Bulk</button></div>
  </div>
@@ -234,6 +241,8 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const now=()=>new Date().toTimeString().slice(0,5);
+const normIdCard=v=>{v=String(v==null?"":v).trim();return /^\d{1,4}$/.test(v)?v.padStart(4,"0"):v};
+const normTime=v=>{v=String(v==null?"":v).trim();if(!v)return "";const m=v.match(/^(\d{1,2}):(\d{1,2})/);return m?String(parseInt(m[1],10)).padStart(2,"0")+":"+String(parseInt(m[2],10)).padStart(2,"0"):v};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
 function persist(){
   localStorage.setItem(KEY,JSON.stringify(db));
@@ -252,7 +261,7 @@ $("vReset").onclick=resetVisitor;$("vInNow").onclick=()=>{$("vIn").value=now()};
 $("vToday").onclick=()=>{$("vFilterDate").value=today();renderVisitors()};
 $("visitorForm").onsubmit=function(e){
  e.preventDefault();
- let o={id:$("vEdit").value||uid(),date:$("vDate").value,name:$("vName").value.trim(),company:$("vCompany").value.trim(),idcard:$("vId").value.trim(),timeIn:$("vIn").value,timeOut:$("vOut").value,purpose:$("vPurpose").value.trim(),area:$("vArea").value.trim(),remark:$("vRemark").value.trim()};
+ let o={id:$("vEdit").value||uid(),date:$("vDate").value,name:$("vName").value.trim(),company:$("vCompany").value.trim(),idcard:normIdCard($("vId").value),timeIn:normTime($("vIn").value),timeOut:normTime($("vOut").value),purpose:$("vPurpose").value.trim(),area:$("vArea").value.trim(),remark:$("vRemark").value.trim()};
  if(!o.name)return alert("Nama wajib diisi.");
  let dup=db.visitors.some(x=>x.date===o.date&&o.idcard&&x.idcard===o.idcard&&x.id!==o.id);
  if(dup&&!confirm("ID Card ini sudah terdaftar pada tanggal tersebut. Simpan sebagai kunjungan baru?"))return;
@@ -283,8 +292,8 @@ $("bvAdd").onclick=function(){
  if(!lines.length)return alert("Masukkan minimal 1 nama.");
  const created=[];
  lines.forEach(line=>{
-   const p=splitBulkLine(line),name=p[0]||"",idcard=p[1]||"";
-   if(name)created.push({id:uid(),date,name,company,idcard,timeIn:$("bvIn").value,timeOut:$("bvOut").value,purpose:$("bvPurpose").value.trim(),area:$("bvArea").value.trim(),remark});
+   const p=splitBulkLine(line),name=p[0]||"",idcard=normIdCard(p[1]||"");
+   if(name)created.push({id:uid(),date,name,company,idcard,timeIn:normTime($("bvIn").value),timeOut:normTime($("bvOut").value),purpose:$("bvPurpose").value.trim(),area:$("bvArea").value.trim(),remark});
  });
  if(!created.length)return alert("Tidak ada nama valid.");
  db.visitors.push(...created);persist();alert(created.length+" visitor berhasil ditambahkan.");resetBulkVisitor();go("visitor");
@@ -292,15 +301,22 @@ $("bvAdd").onclick=function(){
 
 function resetKey(){$("keyForm").reset();$("kEdit").value="";$("kOutDate").value=today();$("kOutTime").value=now()}
 $("kReset").onclick=resetKey;$("kOutNow").onclick=()=>{$("kOutTime").value=now()};
-function resetBulkKey(){ $("bkDate").value=today(); $("bkTime").value=now(); $("bkDivision").value=""; $("bkSecurity").value=""; $("bkRemark").value=""; $("bkLines").value="" }
+function resetBulkKey(){ $("bkDate").value=today(); $("bkTime").value=now(); $("bkBorrower").value=""; $("bkDivision").value=""; $("bkSecurity").value=""; $("bkRemark").value=""; $("bkLines").value="" }
 $("bkReset").onclick=resetBulkKey;
 $("bkAdd").onclick=function(){
- const date=$("bkDate").value||today(),time=$("bkTime").value||now(),division=$("bkDivision").value.trim(),security=$("bkSecurity").value.trim(),remark=$("bkRemark").value.trim();
+ const date=$("bkDate").value||today(),time=normTime($("bkTime").value||now()),commonBorrower=$("bkBorrower").value.trim(),division=$("bkDivision").value.trim(),security=$("bkSecurity").value.trim(),defaultRemark=$("bkRemark").value.trim();
  const lines=$("bkLines").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- if(!lines.length)return alert("Masukkan minimal 1 transaksi key.");
+ if(!lines.length)return alert("Masukkan minimal 1 key.");
+ if(!commonBorrower && lines.some(line=>(line.includes("|")?line.split(/\s*\|\s*/).filter(Boolean):splitBulkLine(line)).length<4))return alert("Isi Nama Peminjam di atas, atau gunakan format per baris: Nama Peminjam | Nama Kunci | Key Number | Remark");
  const created=[];
- lines.forEach(line=>{const p=splitBulkLine(line),borrower=p[0]||"",keyName=p[1]||"",keyNumber=p[2]||"";if(borrower&&keyName)created.push({id:uid(),outDate:date,outTime:time,borrower,division,security,keyName,keyNumber,remark,inDate:"",inTime:"",returner:"",inDivision:"",inSecurity:"",note:""})});
- if(!created.length)return alert("Format tidak valid. Gunakan: Nama | Nama Kunci | Key Number");
+ lines.forEach(line=>{
+   const p=line.includes("|")?line.split(/\s*\|\s*/).map(x=>x.trim()):splitBulkLine(line);
+   let borrower=commonBorrower,keyName="",keyNumber="",rowRemark="";
+   if(p.length>=4){borrower=p[0]||commonBorrower;keyName=p[1]||"";keyNumber=p[2]||"";rowRemark=p.slice(3).join(" | ").trim()}
+   else {keyName=p[0]||"";keyNumber=p[1]||"";rowRemark=p.slice(2).join(" | ").trim()}
+   if(borrower&&keyName)created.push({id:uid(),outDate:date,outTime:time,borrower,division,security,keyName,keyNumber,remark:rowRemark||defaultRemark,inDate:"",inTime:"",returner:"",inDivision:"",inSecurity:"",note:""});
+ });
+ if(!created.length)return alert("Tidak ada transaksi key yang valid.");
  const activeNumbers=new Set(db.keys.filter(x=>!x.inDate&&x.keyNumber).map(x=>String(x.keyNumber).toUpperCase()));
  const conflicts=created.filter(x=>x.keyNumber&&activeNumbers.has(String(x.keyNumber).toUpperCase()));
  if(conflicts.length && !confirm(conflicts.length+" key number masih tercatat OUT. Tetap tambahkan transaksi?"))return;
@@ -308,13 +324,13 @@ $("bkAdd").onclick=function(){
 };
 $("keyForm").onsubmit=function(e){
  e.preventDefault();
- let o={id:$("kEdit").value||uid(),outDate:$("kOutDate").value,outTime:$("kOutTime").value,borrower:$("kBorrower").value.trim(),division:$("kDivision").value.trim(),security:$("kSecurity").value.trim(),keyName:$("kKeyName").value.trim(),keyNumber:$("kKeyNumber").value.trim(),remark:$("kRemark").value.trim(),inDate:$("kInDate").value,inTime:$("kInTime").value,returner:$("kReturner").value.trim(),inDivision:$("kInDivision").value.trim(),inSecurity:$("kInSecurity").value.trim(),note:$("kNote").value.trim()};
+ let o={id:$("kEdit").value||uid(),outDate:$("kOutDate").value,outTime:normTime($("kOutTime").value),borrower:$("kBorrower").value.trim(),division:$("kDivision").value.trim(),security:$("kSecurity").value.trim(),keyName:$("kKeyName").value.trim(),keyNumber:$("kKeyNumber").value.trim(),remark:$("kRemark").value.trim(),inDate:$("kInDate").value,inTime:normTime($("kInTime").value),returner:$("kReturner").value.trim(),inDivision:$("kInDivision").value.trim(),inSecurity:$("kInSecurity").value.trim(),note:$("kNote").value.trim()};
  if(!o.borrower||!o.keyName)return alert("Nama Peminjam dan Nama Kunci wajib diisi.");
  if(!o.inDate&&o.keyNumber&&db.keys.some(x=>x.keyNumber===o.keyNumber&&!x.inDate&&x.id!==o.id)&&!confirm("Key Number ini masih tercatat OUT. Simpan transaksi baru?"))return;
  let i=db.keys.findIndex(x=>x.id===o.id);i>=0?db.keys[i]=o:db.keys.push(o);persist();resetKey();go("key");
 };
 function editKey(id){let o=db.keys.find(x=>x.id===id);if(!o)return;let m={kEdit:o.id,kOutDate:o.outDate,kOutTime:o.outTime,kBorrower:o.borrower,kDivision:o.division,kSecurity:o.security,kKeyName:o.keyName,kKeyNumber:o.keyNumber,kRemark:o.remark,kInDate:o.inDate,kInTime:o.inTime,kReturner:o.returner,kInDivision:o.inDivision,kInSecurity:o.inSecurity,kNote:o.note};Object.keys(m).forEach(k=>$(k).value=m[k]||"");window.scrollTo(0,0)}
-function returnKey(id){let o=db.keys.find(x=>x.id===id);if(!o)return;o.inDate=today();o.inTime=now();o.returner=o.returner||o.borrower;persist()}
+function returnKey(id){let o=db.keys.find(x=>x.id===id);if(!o)return;o.inDate=today();o.inTime=normTime(now());o.returner=o.returner||o.borrower;persist()}
 $("kReturnLast").onclick=()=>{let a=db.keys.filter(x=>!x.inDate).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));if(!a.length)return alert("Tidak ada key yang sedang OUT.");returnKey(a[0].id)}
 function delKey(id){if(confirm("Hapus transaksi key ini?")){db.keys=db.keys.filter(x=>x.id!==id);persist()}}
 function renderKeys(){let q=($("kSearch").value||"").toLowerCase(),st=$("kStatus").value||"",a=db.keys.filter(x=>(!st||(st==="OUT"?!x.inDate:!!x.inDate))&&(!q||[x.borrower,x.division,x.keyName,x.keyNumber,x.security].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));$("kCount").textContent=a.length+" record(s)";$("keyBody").innerHTML=a.length?a.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.outDate)}</td><td>${esc(x.outTime)}</td><td><b>${esc(x.borrower)}</b></td><td>${esc(x.division)}</td><td>${esc(x.security)}</td><td>${esc(x.keyName)}</td><td>${esc(x.keyNumber)}</td><td>${esc(x.inDate)}</td><td>${esc(x.inTime)}</td><td>${esc(x.returner)}</td><td>${esc(x.note||x.remark)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td><td class="no-print">${x.inDate?"":"<button type='button' class='btn success' onclick=\"window.HVSS.returnKey('"+x.id+"')\">Return</button> "}<button type="button" class="btn secondary" onclick="window.HVSS.editKey('${x.id}')">Edit</button> <button type="button" class="btn danger" onclick="window.HVSS.delKey('${x.id}')">Delete</button></td></tr>`).join(""):'<tr><td colspan="14" class="empty">Belum ada transaksi key.</td></tr>'}
@@ -565,7 +581,7 @@ window.parseBulkPersonLine=function(line){
   function setStatus(t){const s=document.getElementById("centralSyncStatus");if(s)s.textContent=t;}
   function applyCentral(data){
     if(!data||!data.ok) throw new Error((data&&data.error)||"Central response invalid");
-    const incoming={visitors:Array.isArray(data.visitors)?data.visitors:[],keys:Array.isArray(data.keys)?data.keys:[]};
+    const incoming={visitors:(Array.isArray(data.visitors)?data.visitors:[]).map(x=>({...x,idcard:normIdCard(x.idcard),timeIn:normTime(x.timeIn),timeOut:normTime(x.timeOut)})),keys:(Array.isArray(data.keys)?data.keys:[]).map(x=>({...x,outTime:normTime(x.outTime),inTime:normTime(x.inTime)}))};
     window.HVSS_DB.visitors=incoming.visitors;
     window.HVSS_DB.keys=incoming.keys;
     localStorage.setItem("HVSS_SCC_V5_PRO",JSON.stringify(window.HVSS_DB));

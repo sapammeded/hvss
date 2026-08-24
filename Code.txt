@@ -1,154 +1,100 @@
-const SPREADSHEET_ID="1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA";
-const VISITOR_SHEET="Visitor Registration";
-const KEY_SHEET="Key Loan";
-const VISITOR_HEADERS=["No","Date","Time In","Time Out","Name","Company / PT","ID Card","Purpose","Area","Remark","Status"];
-const KEY_HEADERS=["No","Date Out","Time Out","Borrower","Division","Security","Key Name","Key Number","Date In","Time In","Returner","Remark OUT","Status"];
+const SPREADSHEET_ID = '1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA';
+const VISITOR_SHEET = 'Visitor Registration';
+const KEY_SHEET = 'Key Loan';
+const VISITOR_HEADERS = ['No','Date','Time In','Time Out','Name','Company / PT','ID Card','Purpose','Area','Remark','Status'];
+const KEY_HEADERS = ['No','Date Out','Time Out','Borrower','Division','Security','Key Name','Key Number','Date In','Time In','Returner','Remark OUT','Status'];
 
-function doGet(e){
-  try{
-    const action=(e&&e.parameter&&e.parameter.action)||"health";
-    let out;
-    if(action==="getAll") out=getAll_();
-    else if(action==="setupCentral") out=setup_();
-    else out={ok:true,service:"HVSS2",spreadsheetId:SPREADSHEET_ID};
-    const cb=e&&e.parameter&&e.parameter.callback;
-    return cb ? jsonp_(out,cb) : json_(out);
-  }catch(err){
-    const out={ok:false,error:String(err)};
-    const cb=e&&e.parameter&&e.parameter.callback;
-    return cb ? jsonp_(out,cb) : json_(out);
-  }
+function json_(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON)}
+function jsonp_(o,cb){return ContentService.createTextOutput(cb+'('+JSON.stringify(o)+')').setMimeType(ContentService.MimeType.JAVASCRIPT)}
+function ss_(){return SpreadsheetApp.openById(SPREADSHEET_ID)}
+
+function normId_(v){
+  v=String(v==null?'':v).trim();
+  return /^\d{1,4}$/.test(v) ? v.padStart(4,'0') : v;
 }
-
-function doPost(e){
-  try{
-    // Supports both raw JSON POST and HTML form POST from GitHub Pages.
-    let raw=(e&&e.postData&&e.postData.contents)||"";
-    let p={};
-    if(raw){
-      try{p=JSON.parse(raw)}catch(ignore){p={};}
-    }
-    if(!p.action && e && e.parameter){
-      if(e.parameter.payload){
-        try{p=JSON.parse(e.parameter.payload)}catch(ignore){p={};}
-      }else{
-        p=e.parameter;
-      }
-    }
-    if(p.action==="setupCentral") return json_(setup_());
-    if(p.action==="syncAll") return json_(syncAll_(p));
-    if(p.action==="addVisitor") return json_(addVisitor_(p.visitor||{}));
-    if(p.action==="addKey") return json_(addKey_(p.key||{}));
-    if(p.action==="resetCentral") return json_(resetCentral_());
-    return json_({ok:false,error:"Unknown action: "+p.action});
-  }catch(err){return json_({ok:false,error:String(err),stack:err.stack||""});}
+function normTime_(v){
+  v=String(v==null?'':v).trim();
+  if(!v)return '';
+  const m=v.match(/^(\d{1,2}):(\d{1,2})/);
+  return m ? String(parseInt(m[1],10)).padStart(2,'0')+':'+String(parseInt(m[2],10)).padStart(2,'0') : v;
 }
-
-function ss_(){return SpreadsheetApp.openById(SPREADSHEET_ID);}
-
-function ensure_(ss,name,headers){
-  let sh=ss.getSheetByName(name);
-  if(!sh) sh=ss.insertSheet(name);
-  const current=sh.getRange(1,1,1,headers.length).getValues()[0];
-  let mismatch=false;
-  for(let i=0;i<headers.length;i++) if(String(current[i]||"")!==headers[i]) {mismatch=true;break;}
-  if(mismatch) sh.getRange(1,1,1,headers.length).setValues([headers]);
-  sh.setFrozenRows(1);
+function ensureSheet_(name,headers){
+  const ss=ss_(); let sh=ss.getSheetByName(name); if(!sh) sh=ss.insertSheet(name);
+  sh.getRange(1,1,1,headers.length).setValues([headers]);
   return sh;
 }
-
-function setup_(){
-  const ss=ss_();
-  const v=ensure_(ss,VISITOR_SHEET,VISITOR_HEADERS);
-  const k=ensure_(ss,KEY_SHEET,KEY_HEADERS);
-  return {ok:true,spreadsheetId:SPREADSHEET_ID,visitorSheet:v.getName(),keySheet:k.getName()};
+function prepareTextColumns_(sh,name){
+  // Keep IDs, key numbers and HH:mm values as TEXT so leading zeroes are never lost.
+  if(name===VISITOR_SHEET){
+    sh.getRange('C:D').setNumberFormat('@');
+    sh.getRange('G:G').setNumberFormat('@');
+  }else{
+    sh.getRange('C:C').setNumberFormat('@');
+    sh.getRange('H:H').setNumberFormat('@');
+    sh.getRange('J:J').setNumberFormat('@');
+  }
 }
-
-function addVisitor_(x){
-  const sh=ensure_(ss_(),VISITOR_SHEET,VISITOR_HEADERS);
-  const no=Math.max(1,sh.getLastRow());
-  sh.appendRow([no,x.date||"",x.timeIn||"",x.timeOut||"",x.name||"",x.company||"",x.idcard||"",x.purpose||"",x.area||"",x.remark||"",x.timeOut?"OUT":"INSIDE"]);
-  SpreadsheetApp.flush();
-  return {ok:true,row:sh.getLastRow(),visitorCount:Math.max(0,sh.getLastRow()-1)};
+function readSheet_(name,headers){
+  const sh=ensureSheet_(name,headers), lr=sh.getLastRow();
+  if(lr<2)return [];
+  const vals=sh.getRange(2,1,lr-1,headers.length).getDisplayValues();
+  const notes=sh.getRange(2,1,lr-1,1).getNotes();
+  return vals.map((r,i)=>rowToObj_(name,r,notes[i]&&notes[i][0])).filter(r=>r.__hasData);
 }
-
-function addKey_(x){
-  const sh=ensure_(ss_(),KEY_SHEET,KEY_HEADERS);
-  const no=Math.max(1,sh.getLastRow());
-  sh.appendRow([no,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.remark||"",x.inDate?"RETURNED":"KEY OUT"]);
-  SpreadsheetApp.flush();
-  return {ok:true,row:sh.getLastRow(),keyCount:Math.max(0,sh.getLastRow()-1)};
+function rowToObj_(name,r,noteId){
+  const has=r.some(v=>String(v).trim()!=='');
+  const legacyId=String(r[0]||'').trim();
+  const id=String(noteId||'').trim() || (/^\d+$/.test(legacyId)?Utilities.getUuid():legacyId) || Utilities.getUuid();
+  if(name===VISITOR_SHEET)return {id,date:r[1]||'',timeIn:normTime_(r[2]),timeOut:normTime_(r[3]),name:r[4]||'',company:r[5]||'',idcard:normId_(r[6]),purpose:r[7]||'',area:r[8]||'',remark:r[9]||'',status:r[10]||'',__hasData:has};
+  return {id,outDate:r[1]||'',outTime:normTime_(r[2]),borrower:r[3]||'',division:r[4]||'',security:r[5]||'',keyName:r[6]||'',keyNumber:r[7]||'',inDate:r[8]||'',inTime:normTime_(r[9]),returner:r[10]||'',remark:r[11]||'',status:r[12]||'',__hasData:has};
 }
-
-function syncAll_(p){
-  const lock=LockService.getScriptLock();
-  lock.waitLock(30000);
+function objToRow_(name,x){
+  if(name===VISITOR_SHEET)return [x.id||Utilities.getUuid(),x.date||'',normTime_(x.timeIn),normTime_(x.timeOut),x.name||'',x.company||'',normId_(x.idcard),x.purpose||'',x.area||'',x.remark||'',x.timeOut?'OUT':'INSIDE'];
+  return [x.id||Utilities.getUuid(),x.outDate||'',normTime_(x.outTime),x.borrower||'',x.division||'',x.security||'',x.keyName||'',x.keyNumber==null?'':String(x.keyNumber),x.inDate||'',normTime_(x.inTime),x.returner||'',x.remark||'',x.inDate?'RETURNED':'KEY OUT'];
+}
+function clean_(x){const y={...x};delete y.__hasData;return y}
+function merge_(existing,incoming){
+  const map=new Map(existing.map(x=>[String(x.id),clean_(x)]));
+  incoming.forEach(raw=>{const x=clean_(raw),id=String(x.id||Utilities.getUuid());x.id=id;map.set(id,x)});
+  return Array.from(map.values());
+}
+function writeMerged_(name,headers,incoming){
+  const sh=ensureSheet_(name,headers), existing=readSheet_(name,headers), merged=merge_(existing,incoming);
+  prepareTextColumns_(sh,name);
+  const oldRows=Math.max(0,sh.getMaxRows()-1);
+  if(oldRows>0){sh.getRange(2,1,oldRows,headers.length).clearContent();sh.getRange(2,1,oldRows,1).clearNote();}
+  if(merged.length){
+    const rows=merged.map(x=>objToRow_(name,x));
+    sh.getRange(2,1,rows.length,headers.length).setValues(rows);
+    // Visible No is always 1,2,3...; internal UUID is kept invisibly as a note on column A.
+    sh.getRange(2,1,rows.length,1).setValues(merged.map((_,i)=>[i+1]));
+    sh.getRange(2,1,rows.length,1).setNotes(merged.map(x=>[String(x.id||Utilities.getUuid())]));
+  }
+  return merged.length;
+}
+function doGet(e){
   try{
-    const ss=ss_();
-    const v=ensure_(ss,VISITOR_SHEET,VISITOR_HEADERS);
-    const k=ensure_(ss,KEY_SHEET,KEY_HEADERS);
-    const vs=Array.isArray(p.visitors)?p.visitors:[];
-    const ks=Array.isArray(p.keys)?p.keys:[];
-    let visitorWritten=0,keyWritten=0;
-
-    // IMPORTANT: never touch spreadsheet column widths or other formatting.
-    // Only replace the data rows for datasets actually supplied by the client.
-    if(vs.length){
-      if(v.getLastRow()>1) v.getRange(2,1,v.getLastRow()-1,VISITOR_HEADERS.length).clearContent();
-      v.getRange(2,1,vs.length,VISITOR_HEADERS.length).setValues(vs.map((x,i)=>[
-        i+1,x.date||"",x.timeIn||"",x.timeOut||"",x.name||"",x.company||"",x.idcard||"",x.purpose||"",x.area||"",x.remark||"",x.timeOut?"OUT":"INSIDE"
-      ]));
-      visitorWritten=vs.length;
+    const a=(e.parameter.action||'').toLowerCase(),cb=e.parameter.callback;
+    if(a==='getcentral'){
+      const out={ok:true,visitors:readSheet_(VISITOR_SHEET,VISITOR_HEADERS),keys:readSheet_(KEY_SHEET,KEY_HEADERS),serverTime:new Date().toISOString()};
+      return cb?jsonp_(out,cb):json_(out);
     }
-    if(ks.length){
-      if(k.getLastRow()>1) k.getRange(2,1,k.getLastRow()-1,KEY_HEADERS.length).clearContent();
-      k.getRange(2,1,ks.length,KEY_HEADERS.length).setValues(ks.map((x,i)=>[
-        i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.remark||"",x.inDate?"RETURNED":"KEY OUT"
-      ]));
-      keyWritten=ks.length;
-    }
-    SpreadsheetApp.flush();
-    return {ok:true,visitorCount:visitorWritten,keyCount:keyWritten,visitorSheet:VISITOR_SHEET,keySheet:KEY_SHEET};
-  }finally{lock.releaseLock();}
+    return json_({ok:true,service:'HVSS CENTRAL',spreadsheetId:SPREADSHEET_ID});
+  }catch(err){const out={ok:false,error:String(err&&err.message||err)};return e.parameter.callback?jsonp_(out,e.parameter.callback):json_(out)}
 }
-
-function resetCentral_(){
-  const lock=LockService.getScriptLock();
-  lock.waitLock(30000);
+function doPost(e){
   try{
-    const ss=ss_();
-    const v=ensure_(ss,VISITOR_SHEET,VISITOR_HEADERS);
-    const k=ensure_(ss,KEY_SHEET,KEY_HEADERS);
-    if(v.getLastRow()>1) v.getRange(2,1,v.getLastRow()-1,VISITOR_HEADERS.length).clearContent();
-    if(k.getLastRow()>1) k.getRange(2,1,k.getLastRow()-1,KEY_HEADERS.length).clearContent();
-    SpreadsheetApp.flush();
-    return {ok:true,visitorCount:0,keyCount:0,message:"Central database reset. Header dan format Spreadsheet dipertahankan."};
-  }finally{lock.releaseLock();}
-}
-
-function getAll_(){
-  const ss=ss_();
-  const v=ensure_(ss,VISITOR_SHEET,VISITOR_HEADERS);
-  const k=ensure_(ss,KEY_SHEET,KEY_HEADERS);
-  return {ok:true,visitors:rows_(v,VISITOR_HEADERS),keys:rows_(k,KEY_HEADERS)};
-}
-
-function rows_(sh,headers){
-  const n=sh.getLastRow();
-  if(n<2)return [];
-  const values=sh.getRange(2,1,n-1,headers.length).getValues();
-  return values.map(function(r,i){
-    if(headers===VISITOR_HEADERS){
-      return {id:"sheet-v-"+(i+2),date:r[1],timeIn:r[2],timeOut:r[3],name:r[4],company:r[5],idcard:r[6],purpose:r[7],area:r[8],remark:r[9],status:r[10]};
+    const p=JSON.parse(e.postData.contents||'{}'),a=(p.action||'').toLowerCase();
+    if(p.spreadsheetId && p.spreadsheetId!==SPREADSHEET_ID)throw new Error('Spreadsheet ID tidak cocok');
+    if(a==='syncall'){
+      const v=writeMerged_(VISITOR_SHEET,VISITOR_HEADERS,Array.isArray(p.visitors)?p.visitors:[]);
+      const k=writeMerged_(KEY_SHEET,KEY_HEADERS,Array.isArray(p.keys)?p.keys:[]);
+      return json_({ok:true,visitorCount:v,keyCount:k,serverTime:new Date().toISOString(),message:'CENTRAL VERIFIED'});
     }
-    return {id:"sheet-k-"+(i+2),outDate:r[1],outTime:r[2],borrower:r[3],division:r[4],security:r[5],keyName:r[6],keyNumber:r[7],inDate:r[8],inTime:r[9],returner:r[10],remark:r[11],status:r[12]};
-  });
-}
-
-function json_(o){
-  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
-}
-function jsonp_(o,cb){
-  if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(String(cb||""))) return json_({ok:false,error:"Invalid callback"});
-  return ContentService.createTextOutput(String(cb)+"("+JSON.stringify(o)+")").setMimeType(ContentService.MimeType.JAVASCRIPT);
+    if(a==='resetcentral'){
+      [[VISITOR_SHEET,VISITOR_HEADERS],[KEY_SHEET,KEY_HEADERS]].forEach(([n,h])=>{const sh=ensureSheet_(n,h);prepareTextColumns_(sh,n);if(sh.getMaxRows()>1){sh.getRange(2,1,sh.getMaxRows()-1,h.length).clearContent();sh.getRange(2,1,sh.getMaxRows()-1,1).clearNote();}});
+      return json_({ok:true,visitorCount:0,keyCount:0,message:'CENTRAL RESET'});
+    }
+    return json_({ok:false,error:'Unknown action'});
+  }catch(err){return json_({ok:false,error:String(err&&err.message||err)})}
 }
