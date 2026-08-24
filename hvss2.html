@@ -39,7 +39,17 @@
   #createdByMbahPri{position:static;display:block;text-align:center;color:#ff1f1f;animation:none;margin-top:8px}
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script></head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script id="hvss-central-contract">
+window.HVSS_CENTRAL_CONFIG = {
+  spreadsheetId: "1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA",
+  visitorSheet: "Visitor Registration",
+  keySheet: "Key Loan",
+  visitorHeaders: ["No","Date","Time In","Time Out","Name","Company / PT","ID Card","Purpose","Area","Remark","Status"],
+  keyHeaders: ["No","Date Out","Time Out","Borrower","Division","Security","Key Name","Key Number","Date In","Time In","Returner","Status"]
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head>
 <body>
 <div class="app">
 <div id="createdByMbahPri">CREATED BY: Mbah Pri</div>
@@ -98,6 +108,22 @@
   </form>
  </div>
  <div class="card">
+  <div class="head"><div><h2>Bulk Visitor Entry</h2><div class="muted">Ratusan nama sekaligus • Company/PT bisa sama</div></div></div>
+  <div class="notice">Isi <b>Company / PT</b> sekali. Masukkan 1 nama per baris. Format: <b>Nama No ID Card</b> (contoh: Andi 0098). Bisa juga pakai <b>Nama | ID</b>. Sistem membuat setiap baris menjadi record visitor terpisah.</div>
+  <div class="formgrid">
+   <div class="field"><label>Date *</label><input id="bvDate" type="date"></div>
+   <div class="field"><label>Company / PT *</label><input id="bvCompany" placeholder="PT Contoh Indonesia"></div>
+   <div class="field"><label>Time In</label><input id="bvIn" type="time"></div>
+   <div class="field"><label>Time Out</label><input id="bvOut" type="time"></div>
+   <div class="field"><label>Purpose / Activity</label><input id="bvPurpose"></div>
+   <div class="field"><label>Area</label><input id="bvArea"></div>
+   <div class="field span2"><label>Nama / ID Card (1 orang per baris)</label><textarea id="bvNames" rows="7" placeholder="Andi Saputra | ID001
+Budi Santoso | ID002
+Citra Dewi | ID003"></textarea></div>
+  </div>
+  <div class="actions"><button type="button" class="btn success" id="bvAdd">+ ADD BULK VISITORS</button><button type="button" class="btn secondary" id="bvReset">Reset Bulk</button></div>
+ </div>
+ <div class="card">
   <div class="head"><div><h2>Visitor Log</h2><div class="muted" id="vCount"></div></div><div class="actions no-print" style="margin:0"><button type="button" class="btn dark" id="vExcel">Excel</button><button type="button" class="btn primary" id="vPdf">PDF</button></div></div>
   <div class="toolbar no-print"><input id="vSearch" placeholder="Search name / company / ID"><input id="vFilterDate" type="date"><button type="button" class="btn secondary" id="vToday">Today</button></div>
   <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>Date</th><th>Name</th><th>Company</th><th>ID Card</th><th>In</th><th>Out</th><th>Purpose</th><th>Area</th><th>Remark</th><th class="no-print">Action</th></tr></thead><tbody id="visitorBody"></tbody></table></div>
@@ -134,6 +160,20 @@
   </form>
  </div>
  <div class="card">
+  <div class="head"><div><h2>Bulk Key Loan Entry</h2><div class="muted">Banyak peminjam / key sekaligus dengan data OUT yang sama</div></div></div>
+  <div class="notice">Isi tanggal, jam, divisi dan security sekali. Masukkan <b>1 transaksi per baris</b>. Format: <b>Nama Peminjam | Nama Kunci | Key Number</b>.</div>
+  <div class="formgrid">
+   <div class="field"><label>Date OUT *</label><input id="bkDate" type="date"></div>
+   <div class="field"><label>Jam OUT *</label><input id="bkTime" type="time"></div>
+   <div class="field"><label>Divisi</label><input id="bkDivision"></div>
+   <div class="field"><label>Security</label><input id="bkSecurity"></div>
+   <div class="field span2"><label>Nama Peminjam | Nama Kunci | Key Number</label><textarea id="bkLines" rows="7" placeholder="Andi | Master Key | K-001
+Budi | Server Room | K-002
+Citra | Office | K-003"></textarea></div>
+  </div>
+  <div class="actions"><button type="button" class="btn success" id="bkAdd">+ ADD BULK KEY LOANS</button><button type="button" class="btn secondary" id="bkReset">Reset Bulk</button></div>
+ </div>
+ <div class="card">
   <div class="head"><div><h2>Key Loan Register</h2><div class="muted" id="kCount"></div></div><div class="actions no-print" style="margin:0"><button type="button" class="btn dark" id="kExcel">Excel</button><button type="button" class="btn primary" id="kPdf">PDF</button></div></div>
   <div class="toolbar no-print"><input id="kSearch" placeholder="Search borrower / key / division"><select id="kStatus"><option value="">All Status</option><option value="OUT">KEY OUT</option><option value="RETURNED">RETURNED</option></select></div>
   <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>OUT Date</th><th>OUT</th><th>Peminjam</th><th>Divisi</th><th>Security</th><th>Key</th><th>Number</th><th>IN Date</th><th>IN</th><th>Returner</th><th>Remark</th><th>Status</th><th class="no-print">Action</th></tr></thead><tbody id="keyBody"></tbody></table></div>
@@ -165,7 +205,7 @@
 </div>
 
 <script>
-const GAS_API_URL="https://script.google.com/macros/s/AKfycbzpbab3_fYUaDGQpooOvK_uhp6IvXhojeua4-3YQ4hMAzJwYTePGkts8hUmoCiyKLyGjQ/exec";
+const GAS_API_URL="https://script.google.com/macros/s/AKfycbw61ybw2jyxH7n3Ft9goUna8Itosm7yOvExbhRDDGfoIS_KdRfd_egQkuezspsjbFyG7Q/exec";
 (function(){
 "use strict";
 const KEY="HVSS_SCC_V5_PRO";
@@ -201,8 +241,44 @@ function filteredVisitors(){let q=($("vSearch").value||"").toLowerCase(),d=$("vF
 function renderVisitors(){let a=filteredVisitors();$("vCount").textContent=a.length+" record(s)";$("visitorBody").innerHTML=a.length?a.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.date)}</td><td><b>${esc(x.name)}</b></td><td>${esc(x.company)}</td><td>${esc(x.idcard)}</td><td>${esc(x.timeIn)}</td><td>${esc(x.timeOut)}</td><td>${esc(x.purpose)}</td><td>${esc(x.area)}</td><td>${esc(x.remark)}</td><td class="no-print"><button type="button" class="btn secondary" onclick="window.HVSS.editVisitor('${x.id}')">Edit</button> <button type="button" class="btn danger" onclick="window.HVSS.delVisitor('${x.id}')">Delete</button></td></tr>`).join(""):'<tr><td colspan="11" class="empty">Belum ada data visitor.</td></tr>'}
 $("vSearch").oninput=renderVisitors;$("vFilterDate").onchange=renderVisitors;
 
+function splitBulkLine(line){
+  line=String(line||"").trim();
+  if(!line)return [];
+  // Accepted formats: Nama | ID, Nama\tID, or Nama ID (ID = token terakhir).
+  if(line.includes("|")) return line.split(/\s*\|\s*/).map(x=>x.trim()).filter(Boolean);
+  if(line.includes("\t")) return line.split(/\t+/).map(x=>x.trim()).filter(Boolean);
+  const m=line.match(/^(.*?)\s+([A-Za-z0-9][A-Za-z0-9._\/-]*)$/);
+  return m?[m[1].trim(),m[2].trim()]:[line.trim()];
+}
+function resetBulkVisitor(){ $("bvDate").value=today(); $("bvCompany").value=""; $("bvIn").value=""; $("bvOut").value=""; $("bvPurpose").value=""; $("bvArea").value=""; $("bvNames").value="" }
+$("bvReset").onclick=resetBulkVisitor;
+$("bvAdd").onclick=function(){
+ const date=$("bvDate").value||today(), company=$("bvCompany").value.trim();
+ const lines=$("bvNames").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(!company)return alert("Company / PT wajib diisi.");
+ if(!lines.length)return alert("Masukkan minimal 1 nama.");
+ const created=[];
+ lines.forEach(line=>{const p=splitBulkLine(line),name=p[0]||"",idcard=p[1]||"";if(name)created.push({id:uid(),date,name,company,idcard,timeIn:$("bvIn").value,timeOut:$("bvOut").value,purpose:$("bvPurpose").value.trim(),area:$("bvArea").value.trim(),remark:""})});
+ if(!created.length)return alert("Tidak ada nama valid.");
+ db.visitors.push(...created);persist();alert(created.length+" visitor berhasil ditambahkan.");resetBulkVisitor();go("visitor");
+};
+
 function resetKey(){$("keyForm").reset();$("kEdit").value="";$("kOutDate").value=today();$("kOutTime").value=now()}
 $("kReset").onclick=resetKey;$("kOutNow").onclick=()=>{$("kOutTime").value=now()};
+function resetBulkKey(){ $("bkDate").value=today(); $("bkTime").value=now(); $("bkDivision").value=""; $("bkSecurity").value=""; $("bkLines").value="" }
+$("bkReset").onclick=resetBulkKey;
+$("bkAdd").onclick=function(){
+ const date=$("bkDate").value||today(),time=$("bkTime").value||now(),division=$("bkDivision").value.trim(),security=$("bkSecurity").value.trim();
+ const lines=$("bkLines").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(!lines.length)return alert("Masukkan minimal 1 transaksi key.");
+ const created=[];
+ lines.forEach(line=>{const p=splitBulkLine(line),borrower=p[0]||"",keyName=p[1]||"",keyNumber=p[2]||"";if(borrower&&keyName)created.push({id:uid(),outDate:date,outTime:time,borrower,division,security,keyName,keyNumber,remark:"",inDate:"",inTime:"",returner:"",inDivision:"",inSecurity:"",note:""})});
+ if(!created.length)return alert("Format tidak valid. Gunakan: Nama | Nama Kunci | Key Number");
+ const activeNumbers=new Set(db.keys.filter(x=>!x.inDate&&x.keyNumber).map(x=>String(x.keyNumber).toUpperCase()));
+ const conflicts=created.filter(x=>x.keyNumber&&activeNumbers.has(String(x.keyNumber).toUpperCase()));
+ if(conflicts.length && !confirm(conflicts.length+" key number masih tercatat OUT. Tetap tambahkan transaksi?"))return;
+ db.keys.push(...created);persist();alert(created.length+" transaksi key berhasil ditambahkan.");resetBulkKey();go("key");
+};
 $("keyForm").onsubmit=function(e){
  e.preventDefault();
  let o={id:$("kEdit").value||uid(),outDate:$("kOutDate").value,outTime:$("kOutTime").value,borrower:$("kBorrower").value.trim(),division:$("kDivision").value.trim(),security:$("kSecurity").value.trim(),keyName:$("kKeyName").value.trim(),keyNumber:$("kKeyNumber").value.trim(),remark:$("kRemark").value.trim(),inDate:$("kInDate").value,inTime:$("kInTime").value,returner:$("kReturner").value.trim(),inDivision:$("kInDivision").value.trim(),inSecurity:$("kInSecurity").value.trim(),note:$("kNote").value.trim()};
@@ -228,16 +304,49 @@ function renderAll(){renderDashboard();renderVisitors();renderKeys();renderRepor
 function download(name,data,type){let blob=new Blob([data],{type:type||"application/octet-stream"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 function xml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
 function crc32(str){let table=crc32.t||(crc32.t=(()=>{let t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})());let c=0xffffffff;for(let i=0;i<str.length;i++){let b=str.charCodeAt(i)&255;c=table[(c^b)&255]^(c>>>8)}return (c^0xffffffff)>>>0}
-function u16(n){return String.fromCharCode(n&255,(n>>>8)&255)}function u32(n){return String.fromCharCode(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255)}
-function zipStore(entries){let out="",central="",offset=0;entries.forEach(e=>{let name=e[0],data=e[1],nb=name,db=data,crc=crc32(db),size=db.length;out+="PK\\x03\\x04"+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+String.fromCharCode(crc&255,(crc>>>8)&255,(crc>>>16)&255,(crc>>>24)&255)+u32(size)+u32(size)+u16(nb.length)+u16(0)+nb+db;central+="PK\\x01\\x02"+u16(20)+u16(20)+u16(0)+u16(0)+u16(0)+u16(0)+String.fromCharCode(crc&255,(crc>>>8)&255,(crc>>>16)&255,(crc>>>24)&255)+u32(size)+u32(size)+u16(nb.length)+u16(0)+u16(0)+u16(0)+u16(0)+u32(0)+u32(offset)+nb;offset=out.length});return out+central+"PK\\x05\\x06"+u16(0)+u16(0)+u16(entries.length)+u16(entries.length)+u32(central.length)+u32(out.length)+u16(0)}
-function xlsxBlob(sheets){let files=[];let wb=['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>','<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'];sheets.forEach((sh,i)=>wb.push('<sheet name="'+xml(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'));wb.push("</sheets></workbook>");files.push(["[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheets.map((_,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+'</Types>']);files.push(["_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>']);files.push(["xl/workbook.xml",wb.join("")]);files.push(["xl/_rels/workbook.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((_,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")+'</Relationships>']);sheets.forEach((sh,i)=>{let rows=sh.rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>'<c r="'+String.fromCharCode(65+ci)+(ri+1)+'" t="inlineStr"><is><t xml:space="preserve">'+xml(v)+'</t></is></c>').join("")+"</row>").join("");files.push(["xl/worksheets/sheet"+(i+1)+".xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" tabSelected="'+(i===0?1:0)+'"/></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols><col min="1" max="30" width="18" customWidth="1"/></cols><sheetData>'+rows+'</sheetData><autoFilter ref="A1:'+String.fromCharCode(64+Math.max(1,Math.min(26,sh.rows[0]?.length||1)))+sh.rows.length+'"/></worksheet>'])});let raw=zipStore(files),u=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i)&255;return new Blob([u],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})}
-function makeVisitorRows(date){let clean=v=>String(v??"").replace(/CREATED\s*BY\s*:?\s*Mbah\s*Pri/ig,"").trim();let a=db.visitors.filter(x=>!date||x.date===date).sort((x,y)=>(x.date+x.timeIn).localeCompare(y.date+y.timeIn));return [["HVSS SECURITY — VISITOR REPORT"],["Reporting Date",date||"ALL"],[],["No","Date","Time In","Time Out","Name","Company","No ID Card","Purpose / Activity","Area","Remark","Status"]].concat(a.map((x,i)=>[i+1,x.date,x.timeIn,x.timeOut,x.name,x.company,x.idcard,x.purpose,x.area,x.remark,x.timeOut?"OUT":"INSIDE"]))}
-function makeKeyRows(date){let clean=v=>String(v??"").replace(/CREATED\s*BY\s*:?\s*Mbah\s*Pri/ig,"").trim();let a=db.keys.filter(x=>!date||x.outDate===date||x.inDate===date).sort((x,y)=>(x.outDate+x.outTime).localeCompare(y.outDate+y.outTime));return [["HVSS SECURITY — KEY CONTROL REPORT"],["Reporting Date",date||"ALL"],[],["No","OUT Date","Jam OUT","Nama Peminjam","Divisi","Security","Nama Kunci","Key Number","IN Date","Jam IN","Remark","Nama Yang Mengembalikan","Divisi IN","Security IN","Keterangan","Status"]].concat(a.map((x,i)=>[i+1,x.outDate,x.outTime,x.borrower,x.division,x.security,x.keyName,x.keyNumber,x.inDate,x.inTime,x.remark,x.returner,x.inDivision,x.inSecurity,x.note,x.inDate?"RETURNED":"KEY OUT"]))}
-function exportXlsx(rows,name){rows=rows.map(r=>r.map(v=>typeof v==="string"?v.replace(/CREATED\s*BY\s*:?\s*Mbah\s*Pri/ig,"").trim():v));let blob=xlsxBlob([{name:"Report",rows:rows}]),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function utf8Bytes(str){return new TextEncoder().encode(String(str==null?"":str))}
+function bytesConcat(parts){let total=parts.reduce((n,a)=>n+a.length,0),out=new Uint8Array(total),o=0;parts.forEach(a=>{out.set(a,o);o+=a.length});return out}
+function u16b(n){return new Uint8Array([n&255,(n>>>8)&255])}
+function u32b(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255])}
+function crc32Bytes(bytes){let table=crc32Bytes.t||(crc32Bytes.t=(()=>{let t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);t[n]=c>>>0}return t})());let c=0xffffffff;for(let i=0;i<bytes.length;i++)c=table[(c^bytes[i])&255]^(c>>>8);return (c^0xffffffff)>>>0}
+function zipStore(entries){
+  const local=[],central=[];let offset=0;
+  entries.forEach(e=>{
+    const nb=utf8Bytes(e[0]),db=utf8Bytes(e[1]),crc=crc32Bytes(db),size=db.length;
+    const lh=bytesConcat([new Uint8Array([80,75,3,4]),u16b(20),u16b(0),u16b(0),u16b(0),u16b(0),u32b(crc),u32b(size),u32b(size),u16b(nb.length),u16b(0),nb,db]);
+    local.push(lh);
+    const ch=bytesConcat([new Uint8Array([80,75,1,2]),u16b(20),u16b(20),u16b(0),u16b(0),u16b(0),u16b(0),u32b(crc),u32b(size),u32b(size),u16b(nb.length),u16b(0),u16b(0),u16b(0),u16b(0),u32b(0),u32b(offset),nb]);
+    central.push(ch);offset+=lh.length;
+  });
+  const localBytes=bytesConcat(local),centralBytes=bytesConcat(central);
+  const end=bytesConcat([new Uint8Array([80,75,5,6]),u16b(0),u16b(0),u16b(entries.length),u16b(entries.length),u32b(centralBytes.length),u32b(localBytes.length),u16b(0)]);
+  return bytesConcat([localBytes,centralBytes,end]);
+}
+function xlsxBlob(sheets){
+  let files=[];
+  const wb=['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>','<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'];
+  sheets.forEach((sh,i)=>wb.push('<sheet name="'+xml(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'));wb.push('</sheets></workbook>');
+  files.push(['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheets.map((_,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>']);
+  files.push(['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>']);
+  files.push(['xl/workbook.xml',wb.join('')]);
+  files.push(['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((_,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join('')+'</Relationships>']);
+  sheets.forEach((sh,i)=>{
+    const rows=sh.rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>'<c r="'+String.fromCharCode(65+ci)+(ri+1)+'" t="inlineStr"><is><t xml:space="preserve">'+xml(v)+'</t></is></c>').join('')+'</row>').join('');
+    const maxCol=Math.max(1,sh.rows.reduce((m,r)=>Math.max(m,r.length),0));
+    const colLetter=n=>{let s='';while(n){let r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26)}return s};
+    files.push(['xl/worksheets/sheet'+(i+1)+'.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" tabSelected="'+(i===0?1:0)+'"/></sheetViews><sheetFormatPr defaultRowHeight="18"/><sheetData>'+rows+'</sheetData>'+(sh.rows.length?'<autoFilter ref="A1:'+colLetter(maxCol)+sh.rows.length+'"/>':'')+'</worksheet>']);
+  });
+  const raw=zipStore(files);return new Blob([raw],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function cleanReportValue(v){return typeof v==="string"?v.replace(/CREATED\s*BY\s*:?\s*Mbah\s*Pri/ig,"").trim():v}
+function makeVisitorRows(date){let a=db.visitors.filter(x=>!date||x.date===date).sort((x,y)=>(x.date+x.timeIn+x.name).localeCompare(y.date+y.timeIn+y.name));return [["No","Date","Time In","Time Out","Name","Company","No ID Card","Purpose / Activity","Area","Remark","Status"]].concat(a.map((x,i)=>[i+1,x.date||"",x.timeIn||"",x.timeOut||"",x.name||"",x.company||"",x.idcard||"",x.purpose||"",x.area||"",x.remark||"",x.timeOut?"OUT":"INSIDE"]))}
+function makeKeyRows(date){let a=db.keys.filter(x=>!date||x.outDate===date||x.inDate===date).sort((x,y)=>(x.outDate+x.outTime+x.borrower).localeCompare(y.outDate+y.outTime+y.borrower));return [["No","OUT Date","OUT Time","Nama Peminjam","Divisi","Security OUT","Nama Kunci","Key Number","IN Date","IN Time","Nama Yang Mengembalikan","Divisi IN","Security IN","Remark OUT","Keterangan","Status"]].concat(a.map((x,i)=>[i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inDivision||"",x.inSecurity||"",x.remark||"",x.note||"",x.inDate?"RETURNED":"KEY OUT"]))}
+function exportWorkbook(sheets,name){sheets=sheets.map(sh=>({name:sh.name,rows:sh.rows.map(r=>r.map(cleanReportValue))}));let blob=xlsxBlob(sheets),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function exportXlsx(rows,name){exportWorkbook([{name:"Report",rows}],name)}
 $("vExcel").onclick=()=>exportXlsx(makeVisitorRows($("vFilterDate").value||""),"HVSS_Visitor_Report.xlsx");
 $("kExcel").onclick=()=>exportXlsx(makeKeyRows(""),"HVSS_Key_Control_Report.xlsx");
-$("reportExcel").onclick=()=>{let d=$("reportDate").value;exportXlsx(makeVisitorRows(d),"HVSS_Daily_Visitor_"+d+".xlsx");setTimeout(()=>exportXlsx(makeKeyRows(d),"HVSS_Daily_Key_"+d+".xlsx"),500)}
-$("allExcel").onclick=()=>{exportXlsx(makeVisitorRows(""),"HVSS_All_Visitors.xlsx");setTimeout(()=>exportXlsx(makeKeyRows(""),"HVSS_All_Key_Control.xlsx"),500)}
+$("reportExcel").onclick=()=>{let d=$("reportDate").value||today();exportWorkbook([{name:"VISITOR_REPORT",rows:makeVisitorRows(d)},{name:"KEY_CONTROL",rows:makeKeyRows(d)}],"HVSS_Daily_Report_"+d+".xlsx")};
+$("allExcel").onclick=()=>{exportWorkbook([{name:"VISITOR_REPORT",rows:makeVisitorRows("")},{name:"KEY_CONTROL",rows:makeKeyRows("")}],"HVSS_All_Security_Report.xlsx")};
 
 function hvssBuildPdf(mode){
   if(!window.jspdf || !window.jspdf.jsPDF){
@@ -377,8 +486,61 @@ $("reportPdf").onclick=()=>{renderReport();setTimeout(()=>hvssBuildPdf("visitor"
 $("allPdf").onclick=()=>hvssBuildPdf("history");
 
 window.HVSS={editVisitor,delVisitor,editKey,returnKey,delKey};
-resetVisitor();resetKey();renderAll();
+resetVisitor();resetKey();resetBulkVisitor();resetBulkKey();renderAll();
 })();
+</script>
+<script>function exportExcel(){
+  if(!window.XLSX){alert("Excel engine belum siap. Refresh halaman lalu coba lagi.");return}
+  const visitors=(typeof db!=="undefined"&&Array.isArray(db.visitors))?db.visitors:[];
+  const keys=(typeof db!=="undefined"&&Array.isArray(db.keys))?db.keys:[];
+  const v=visitors.map((x,i)=>({
+    "No":i+1,"Date":x.date||"","Time In":x.timeIn||"","Time Out":x.timeOut||"",
+    "Name":x.name||"","Company / PT":x.company||"","ID Card":x.idcard||"",
+    "Purpose":x.purpose||"","Area":x.area||"","Remark":x.remark||"",
+    "Status":x.timeOut?"OUT":"INSIDE"
+  }));
+  const k=keys.map((x,i)=>({
+    "No":i+1,"Date Out":x.outDate||"","Time Out":x.outTime||"",
+    "Borrower":x.borrower||"","Division":x.division||"","Security":x.security||"",
+    "Key Name":x.keyName||"","Key Number":x.keyNumber||"",
+    "Date In":x.inDate||"","Time In":x.inTime||"","Returner":x.returner||"",
+    "Status":x.inDate?"RETURNED":"KEY OUT"
+  }));
+  const wb=XLSX.utils.book_new();
+  const wsV=XLSX.utils.json_to_sheet(v);
+  const wsK=XLSX.utils.json_to_sheet(k);
+  XLSX.utils.book_append_sheet(wb,wsV,"Visitor Registration");
+  XLSX.utils.book_append_sheet(wb,wsK,"Key Loan");
+  wsV["!cols"]=[8,12,12,12,24,25,14,24,16,30,12].map(w=>({wch:w}));
+  wsK["!cols"]=[8,12,12,24,18,20,24,16,12,12,20,14].map(w=>({wch:w}));
+  XLSX.writeFile(wb,"HVSS_OFFICIAL_"+new Date().toISOString().slice(0,10)+".xlsx");
+}</script>
+<script id="hvss-bulk-parser">
+window.parseBulkPersonLine=function(line){
+  line=String(line||"").trim();
+  if(!line) return null;
+  const p=line.split(/\s+/);
+  if(p.length>=2 && /^\d+$/.test(p[p.length-1])){
+    return {name:p.slice(0,-1).join(" "), idcard:p[p.length-1]};
+  }
+  return {name:line,idcard:""};
+};
+</script>
+
+<script id="hvss-central-sync">
+window.HVSS_SYNC_PAYLOAD=function(){
+  return {
+    action:"syncAll",
+    spreadsheetId:window.HVSS_CENTRAL_CONFIG.spreadsheetId,
+    visitorSheet:window.HVSS_CENTRAL_CONFIG.visitorSheet,
+    keySheet:window.HVSS_CENTRAL_CONFIG.keySheet,
+    visitors:(typeof db!=="undefined"&&Array.isArray(db.visitors))?db.visitors:[],
+    keys:(typeof db!=="undefined"&&Array.isArray(db.keys))?db.keys:[],
+    visitorHeaders:window.HVSS_CENTRAL_CONFIG.visitorHeaders,
+    keyHeaders:window.HVSS_CENTRAL_CONFIG.keyHeaders,
+    clientTime:new Date().toISOString()
+  };
+};
 </script>
 </body>
 </html>
