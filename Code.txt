@@ -2,7 +2,7 @@ const SPREADSHEET_ID="1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA";
 const VISITOR_SHEET="Visitor Registration";
 const KEY_SHEET="Key Loan";
 const VISITOR_HEADERS=["No", "Date", "Time In", "Time Out", "Name", "Company / PT", "ID Card", "Purpose", "Area", "Remark", "Status"];
-const KEY_HEADERS=["No", "Date Out", "Time Out", "Borrower", "Division", "Security", "Key Name", "Key Number", "Date In", "Time In", "Returner", "Status"];
+const KEY_HEADERS=["No", "Date Out", "Time Out", "Borrower", "Division", "Security", "Key Name", "Key Number", "Date In", "Time In", "Returner", "Remark OUT", "Status"];
 
 function doGet(e){
   try{
@@ -53,16 +53,45 @@ function addKey_(x){
   const sh=ensure_(ss_(),KEY_SHEET,KEY_HEADERS);
   const no=Math.max(1,sh.getLastRow());
   sh.appendRow([no,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",
-    x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inDate?"RETURNED":"KEY OUT"]);
+    x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.remark||"",x.inDate?"RETURNED":"KEY OUT"]);
   return {ok:true,row:sh.getLastRow()};
 }
 
+
+function applyWidths_(ss,settings){
+  if(!settings || typeof settings!=="object") return;
+  const v=ss.getSheetByName(VISITOR_SHEET);
+  const k=ss.getSheetByName(KEY_SHEET);
+  if(v && settings.visitorWidths && typeof settings.visitorWidths==="object"){
+    Object.keys(settings.visitorWidths).forEach(c=>{
+      const n=Number(settings.visitorWidths[c]);
+      const col=Number(c);
+      if(col>=1 && col<=v.getMaxColumns() && n>=50 && n<=1000) v.setColumnWidth(col,n);
+    });
+  }
+  if(k && settings.keyWidths && typeof settings.keyWidths==="object"){
+    Object.keys(settings.keyWidths).forEach(c=>{
+      const n=Number(settings.keyWidths[c]);
+      const col=Number(c);
+      if(col>=1 && col<=k.getMaxColumns() && n>=50 && n<=1000) k.setColumnWidth(col,n);
+    });
+  }
+}
+
 function syncAll_(p){
+  const lock=LockService.getScriptLock();
+  lock.waitLock(30000);
+  try{
   const ss=ss_();
   const v=ensure_(ss,VISITOR_SHEET,VISITOR_HEADERS);
   const k=ensure_(ss,KEY_SHEET,KEY_HEADERS);
   const vs=Array.isArray(p.visitors)?p.visitors:[];
   const ks=Array.isArray(p.keys)?p.keys:[];
+  if(!vs.length && !ks.length){
+    applyWidths_(ss,p.settings||{});
+    SpreadsheetApp.flush();
+    return {ok:true,visitorCount:0,keyCount:0,skippedEmptySync:true};
+  }
   if(v.getLastRow()>1) v.getRange(2,1,v.getLastRow()-1,VISITOR_HEADERS.length).clearContent();
   if(k.getLastRow()>1) k.getRange(2,1,k.getLastRow()-1,KEY_HEADERS.length).clearContent();
   if(vs.length) v.getRange(2,1,vs.length,VISITOR_HEADERS.length).setValues(vs.map((x,i)=>[
@@ -71,11 +100,13 @@ function syncAll_(p){
   ]));
   if(ks.length) k.getRange(2,1,ks.length,KEY_HEADERS.length).setValues(ks.map((x,i)=>[
     i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",
-    x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",
+    x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.remark||"",
     x.inDate?"RETURNED":"KEY OUT"
   ]));
+  applyWidths_(ss,p.settings||{});
   SpreadsheetApp.flush();
   return {ok:true,visitorCount:vs.length,keyCount:ks.length};
+  }finally{lock.releaseLock();}
 }
 
 function getAll_(){
@@ -90,9 +121,10 @@ function rows_(sh,headers){
   if(n<2)return [];
   const values=sh.getRange(2,1,n-1,headers.length).getValues();
   return values.map(r=>{
-    const o={};
-    headers.forEach((h,i)=>o[h]=r[i]);
-    return o;
+    if(headers===VISITOR_HEADERS){
+      return {id:String(r[0]||""),date:r[1],timeIn:r[2],timeOut:r[3],name:r[4],company:r[5],idcard:r[6],purpose:r[7],area:r[8],remark:r[9],status:r[10]};
+    }
+    return {id:String(r[0]||""),outDate:r[1],outTime:r[2],borrower:r[3],division:r[4],security:r[5],keyName:r[6],keyNumber:r[7],inDate:r[8],inTime:r[9],returner:r[10],remark:r[11],status:r[12]};
   });
 }
 
