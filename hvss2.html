@@ -53,7 +53,7 @@ window.HVSS_CENTRAL_CONFIG = {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script id="HVSS_CENTRAL_CONFIG">
 window.HVSS_CENTRAL = {
   spreadsheetId: "1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA",
-  gasUrl: "https://script.google.com/macros/s/AKfycbyS5p0Z_21cD0qdT6IhzNtZ2lYMNCCgZ7lWqQAVhjW3L3Lvf_0Su8HRRCPy_J3sClG3BA/exec",
+  gasUrl: "https://script.google.com/macros/s/AKfycbyGhswRZ5bDxVLPE_nU6nD9FWddU-WnFm6Vw8YBPIr5Y2VBdwx_jHtVxNr6Ltcph3eNAg/exec",
   visitorSheet: "Visitor Registration",
   keySheet: "Key Loan"
 };
@@ -229,7 +229,7 @@ const GAS_API_URL="https://script.google.com/macros/s/AKfycbzpbab3_fYUaDGQpooOvK
 const KEY="HVSS_SCC_V5_PRO";
 let db={visitors:[],keys:[]};
 try{db=JSON.parse(localStorage.getItem(KEY)||'{"visitors":[],"keys":[]}');if(!db.visitors)db.visitors=[];if(!db.keys)db.keys=[]}catch(e){db={visitors:[],keys:[]}}
-window.HVSS_DB=db;
+window.HVSS_DB=db; window.db=db;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -561,172 +561,89 @@ window.parseBulkPersonLine=function(line){
 <script id="HVSS_RELIABLE_SYNC_ENGINE">
 (function(){
   const C=window.HVSS_CENTRAL;
-  let syncTimer=null, syncing=false, loading=false;
-
-  function centralJSONP(action){
+  let syncTimer=null,syncing=false;
+  function setStatus(t){const s=document.getElementById("centralSyncStatus");if(s)s.textContent=t;}
+  function applyCentral(data){
+    if(!data||!data.ok) throw new Error((data&&data.error)||"Central response invalid");
+    const incoming={visitors:Array.isArray(data.visitors)?data.visitors:[],keys:Array.isArray(data.keys)?data.keys:[]};
+    window.HVSS_DB.visitors=incoming.visitors;
+    window.HVSS_DB.keys=incoming.keys;
+    localStorage.setItem("HVSS_SCC_V5_PRO",JSON.stringify(window.HVSS_DB));
+    window.HVSS_DB=window.HVSS_DB;
+    if(typeof renderAll==='function') renderAll();
+    return incoming;
+  }
+  function pullCentral(){
     return new Promise((resolve,reject)=>{
-      const cb="hvssCentral_"+Date.now()+"_"+Math.floor(Math.random()*99999);
+      const cb="hvssCentralCb_"+Date.now()+Math.random().toString(36).slice(2);
       const script=document.createElement("script");
-      let done=false;
-      const finish=(fn,val)=>{if(done)return;done=true;clearTimeout(timer);try{delete window[cb]}catch(e){}script.remove();fn(val)};
-      window[cb]=data=>finish(resolve,data);
-      script.onerror=()=>finish(reject,new Error("Gagal membaca Google Spreadsheet pusat."));
-      script.src=C.gasUrl+"?action="+encodeURIComponent(action)+"&callback="+encodeURIComponent(cb)+"&_t="+Date.now();
-      document.body.appendChild(script);
-      const timer=setTimeout(()=>finish(reject,new Error("Central database timeout.")),20000);
+      const timer=setTimeout(()=>{cleanup();reject(new Error("Timeout mengambil data CENTRAL"))},15000);
+      function cleanup(){clearTimeout(timer);try{delete window[cb]}catch(e){}script.remove()}
+      window[cb]=data=>{cleanup();try{resolve(applyCentral(data))}catch(e){reject(e)}};
+      script.onerror=()=>{cleanup();reject(new Error("Gagal terhubung ke Apps Script CENTRAL"))};
+      script.src=C.gasUrl+"?action=getCentral&spreadsheetId="+encodeURIComponent(C.spreadsheetId)+"&callback="+encodeURIComponent(cb)+"&_="+Date.now();
+      document.head.appendChild(script);
     });
   }
-
-  function localData(){
-    return {
-      visitors:(typeof db!=="undefined"&&Array.isArray(db.visitors))?db.visitors:[],
-      keys:(typeof db!=="undefined"&&Array.isArray(db.keys))?db.keys:[]
-    };
-  }
-  function signature(x){
-    const v=x.visitors||[],k=x.keys||[];
-    return v.length+"|"+k.length+"|"+
-      (v.length?JSON.stringify(v[v.length-1]):"")+"|"+
-      (k.length?JSON.stringify(k[k.length-1]):"");
-  }
-  function saveLocal(){
-    localStorage.setItem(KEY,JSON.stringify(db));
-    window.HVSS_DB=db;
-    renderAll();
-  }
-
-  async function loadCentral(force){
-    if(loading)return {ok:false,busy:true};
-    loading=true;
-    const status=document.getElementById("centralSyncStatus");
-    try{
-      if(status)status.textContent="Mengambil data dari Spreadsheet pusat...";
-      const data=await centralJSONP("getAll");
-      if(!data||!data.ok)throw new Error((data&&data.error)||"Google Spreadsheet menolak pembacaan data.");
-      const central={visitors:Array.isArray(data.visitors)?data.visitors:[],keys:Array.isArray(data.keys)?data.keys:[]};
-      // Spreadsheet is the canonical database. Replace this device's local copy.
-      db.visitors=central.visitors;
-      db.keys=central.keys;
-      saveLocal();
-      if(status)status.textContent="✓ Data CENTRAL dimuat: "+central.visitors.length+" visitor / "+central.keys.length+" key";
-      return {ok:true,visitorCount:central.visitors.length,keyCount:central.keys.length};
-    }catch(e){
-      if(status)status.textContent="⚠ Gagal ambil CENTRAL: "+(e.message||e);
-      throw e;
-    }finally{loading=false;}
-  }
-
-  function submitFormPost(payload){
-    return new Promise((resolve,reject)=>{
-      const frame=document.createElement("iframe");
-      const name="hvssPost_"+Date.now()+"_"+Math.floor(Math.random()*9999);
-      frame.name=name;frame.style.display="none";document.body.appendChild(frame);
-      const form=document.createElement("form");
-      form.method="POST";form.action=C.gasUrl;form.target=name;form.style.display="none";
-      const input=document.createElement("input");input.type="hidden";input.name="payload";input.value=JSON.stringify(payload);
-      form.appendChild(input);document.body.appendChild(form);
-      let finished=false;
-      const cleanup=()=>{if(finished)return;finished=true;form.remove();setTimeout(()=>frame.remove(),1000)};
-      const timer=setTimeout(()=>{cleanup();resolve({queued:true})},1200);
-      frame.onload=()=>{clearTimeout(timer);cleanup();resolve({queued:true})};
-      try{form.submit()}catch(e){clearTimeout(timer);cleanup();reject(e)}
-    });
-  }
-
-  async function verifyCentral(expected){
-    for(let i=0;i<8;i++){
-      await new Promise(r=>setTimeout(r,i===0?1000:700));
-      try{
-        const data=await centralJSONP("getAll");
-        if(data&&data.ok){
-          const got={visitors:data.visitors||[],keys:data.keys||[]};
-          if(signature(got)===signature(expected))return {ok:true,visitorCount:got.visitors.length,keyCount:got.keys.length};
-        }
-      }catch(e){}
-    }
-    throw new Error("Data sudah dikirim tetapi verifikasi CENTRAL belum cocok. Tekan SYNC lagi.");
-  }
-
   async function syncNow(reason){
     if(syncing)return {ok:false,busy:true};
     syncing=true;
     try{
-      const local=localData();
-      const payload={
-        action:"syncAll",
-        spreadsheetId:C.spreadsheetId,
-        visitorSheet:C.visitorSheet,
-        keySheet:C.keySheet,
-        visitors:local.visitors,
-        keys:local.keys,
-        visitorHeaders:window.HVSS_VISITOR_HEADERS,
-        keyHeaders:window.HVSS_KEY_HEADERS,
-        clientTime:new Date().toISOString(),
-        reason:reason||"manual"
-      };
-      await submitFormPost(payload);
-      const verified=await verifyCentral(local);
-      const status=document.getElementById("centralSyncStatus");
-      if(status)status.textContent="✓ CENTRAL VERIFIED: "+verified.visitorCount+" visitor / "+verified.keyCount+" key";
-      return verified;
-    }finally{syncing=false;}
-  }
-
-  window.HVSS_CENTRAL_SYNC=syncNow;
-  window.HVSS_LOAD_CENTRAL=loadCentral;
-  window.HVSS_AUTO_SYNC=function(){
-    clearTimeout(syncTimer);
-    syncTimer=setTimeout(async()=>{
-      try{await syncNow("auto");}
-      catch(e){
-        const st=document.getElementById("centralSyncStatus");
-        if(st)st.textContent="⚠ Sync gagal: "+(e.message||e);
-        console.warn("HVSS auto sync gagal:",e);
+      const payload={action:"syncAll",spreadsheetId:C.spreadsheetId,visitorSheet:C.visitorSheet,keySheet:C.keySheet,
+        visitors:Array.isArray(window.HVSS_DB?.visitors)?window.HVSS_DB.visitors:[],
+        keys:Array.isArray(window.HVSS_DB?.keys)?window.HVSS_DB.keys:[],
+        visitorHeaders:window.HVSS_VISITOR_HEADERS,keyHeaders:window.HVSS_KEY_HEADERS,
+        clientTime:new Date().toISOString(),reason:reason||"manual"};
+      const body=JSON.stringify(payload);
+      let sent=false;
+      try{
+        const r=await fetch(C.gasUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body});
+        const text=await r.text(); let data; try{data=JSON.parse(text)}catch(e){throw new Error("Apps Script response bukan JSON")}
+        if(!data.ok)throw new Error(data.error||"Apps Script menolak sync");
+        sent=true;
+      }catch(e){
+        if(navigator.sendBeacon) sent=navigator.sendBeacon(C.gasUrl,new Blob([body],{type:"text/plain;charset=utf-8"}));
+        if(!sent) throw e;
       }
-    },700);
+      // Central is authoritative: read it back after the write.
+      const central=await pullCentral();
+      return {ok:true,visitorCount:central.visitors.length,keyCount:central.keys.length,message:"CENTRAL VERIFIED"};
+    }finally{syncing=false}
+  }
+  window.HVSS_CENTRAL_PULL=pullCentral;
+  window.HVSS_CENTRAL_SYNC=syncNow;
+  window.HVSS_AUTO_SYNC=function(){
+    clearTimeout(syncTimer);syncTimer=setTimeout(async()=>{try{const r=await syncNow("auto");setStatus("✓ CENTRAL VERIFIED • "+r.visitorCount+" visitor / "+r.keyCount+" key")}catch(e){setStatus("⚠ Sync gagal: "+(e.message||e));console.warn(e)}},800);
   };
-
-  window.HVSS_RESET_LOCAL_TO_CENTRAL=async function(){
-    if(!confirm("RESET DEVICE? Data lokal perangkat ini akan dibuang dan diganti dengan data dari Spreadsheet CENTRAL."))return;
-    await loadCentral(true);
+  window.HVSS_RESET_DEVICE_TO_CENTRAL=async function(){
+    const r=await pullCentral();setStatus("✓ DEVICE mengikuti CENTRAL • "+r.visitors.length+" visitor / "+r.keys.length+" key");return r;
   };
   window.HVSS_RESET_CENTRAL=async function(){
-    if(!confirm("RESET CENTRAL DATABASE? Semua data Visitor Registration dan Key Loan di Spreadsheet akan dihapus. Header dan format Spreadsheet tetap."))return;
-    if(!confirm("KONFIRMASI TERAKHIR: hapus semua data CENTRAL untuk SEMUA DEVICE?"))return;
-    const st=document.getElementById("centralSyncStatus");
-    if(st)st.textContent="Resetting CENTRAL...";
-    await submitFormPost({action:"resetCentral",spreadsheetId:C.spreadsheetId});
-    await new Promise(r=>setTimeout(r,1200));
-    await loadCentral(true);
-    if(st)st.textContent="✓ CENTRAL RESET — semua device akan membaca database kosong.";
+    const body=JSON.stringify({action:"resetCentral",spreadsheetId:C.spreadsheetId,visitorSheet:C.visitorSheet,keySheet:C.keySheet});
+    let done=false;
+    try{const r=await fetch(C.gasUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body});const d=await r.json();if(!d.ok)throw new Error(d.error||"Reset ditolak");done=true}catch(e){if(navigator.sendBeacon)done=navigator.sendBeacon(C.gasUrl,new Blob([body],{type:"text/plain;charset=utf-8"}));if(!done)throw e}
+    return window.HVSS_RESET_DEVICE_TO_CENTRAL();
   };
+  window.addEventListener("load",()=>setTimeout(async()=>{try{const r=await pullCentral();setStatus("✓ CENTRAL LOADED • "+r.visitors.length+" visitor / "+r.keys.length+" key")}catch(e){setStatus("⚠ CENTRAL belum terbaca: "+(e.message||e))}},900));
 })();
 </script>
 
 <div id="centralSyncBar" style="display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap">
 <button id="centralSyncBtn" type="button">SYNC CENTRAL DATABASE</button>
-<button id="centralLoadBtn" type="button">↻ AMBIL DATA CENTRAL</button>
-<button id="centralResetBtn" type="button">RESET DEVICE → CENTRAL</button>
-<button id="centralWipeBtn" type="button" style="background:#b42318;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-weight:800">RESET CENTRAL DATABASE</button>
+<button id="centralPullBtn" type="button">AMBIL DATA CENTRAL</button>
+<button id="centralResetDeviceBtn" type="button">RESET DEVICE → CENTRAL</button>
+<button id="centralResetBtn" type="button" style="background:#b42318;color:#fff">RESET CENTRAL DATABASE</button>
 <span id="centralSyncStatus" style="font-size:12px"></span>
 </div>
 <script>
 document.addEventListener("DOMContentLoaded",function(){
- const b=document.getElementById("centralSyncBtn"),l=document.getElementById("centralLoadBtn"),r=document.getElementById("centralResetBtn"),w=document.getElementById("centralWipeBtn"),s=document.getElementById("centralSyncStatus");
- if(b)b.onclick=async function(){
-   b.disabled=true;s.textContent="Mengirim + verifikasi CENTRAL...";
-   try{await window.HVSS_CENTRAL_SYNC();}
-   catch(e){s.textContent="✕ "+(e.message||e);alert("Central sync gagal: "+(e.message||e));}
-   finally{b.disabled=false}
- };
- if(l)l.onclick=async function(){l.disabled=true;try{await window.HVSS_LOAD_CENTRAL(true)}catch(e){alert("Gagal mengambil data CENTRAL: "+(e.message||e))}finally{l.disabled=false}};
- if(r)r.onclick=async function(){r.disabled=true;try{await window.HVSS_RESET_LOCAL_TO_CENTRAL()}catch(e){alert("Reset device gagal: "+(e.message||e))}finally{r.disabled=false}};
- if(w)w.onclick=async function(){w.disabled=true;try{await window.HVSS_RESET_CENTRAL()}catch(e){s.textContent="✕ Reset CENTRAL gagal: "+(e.message||e);alert("Reset CENTRAL gagal: "+(e.message||e))}finally{w.disabled=false}};
- // On every new page load, CENTRAL is the source of truth.
- setTimeout(()=>window.HVSS_LOAD_CENTRAL(true).catch(()=>{}),900);
+ const b=document.getElementById("centralSyncBtn"),p=document.getElementById("centralPullBtn"),rd=document.getElementById("centralResetDeviceBtn"),rc=document.getElementById("centralResetBtn"),s=document.getElementById("centralSyncStatus");
+ if(b)b.onclick=async function(){b.disabled=true;s.textContent="Syncing...";try{const r=await window.HVSS_CENTRAL_SYNC("manual");s.textContent="✓ CENTRAL VERIFIED • "+r.visitorCount+" visitor / "+r.keyCount+" key"}catch(e){s.textContent="✕ "+(e.message||e);alert("Central sync gagal: "+(e.message||e))}finally{b.disabled=false}};
+ if(p)p.onclick=async function(){p.disabled=true;s.textContent="Mengambil CENTRAL...";try{const r=await window.HVSS_CENTRAL_PULL();s.textContent="✓ CENTRAL LOADED • "+r.visitors.length+" visitor / "+r.keys.length+" key"}catch(e){s.textContent="✕ "+(e.message||e);alert("Gagal mengambil data CENTRAL: "+(e.message||e))}finally{p.disabled=false}};
+ if(rd)rd.onclick=async function(){if(!confirm("Hapus cache device dan ambil ulang data dari Spreadsheet CENTRAL?"))return;rd.disabled=true;try{const r=await window.HVSS_RESET_DEVICE_TO_CENTRAL();alert("Device sekarang mengikuti CENTRAL. "+r.visitors.length+" visitor / "+r.keys.length+" key.")}catch(e){alert("Gagal reset device: "+(e.message||e))}finally{rd.disabled=false}};
+ if(rc)rc.onclick=async function(){if(!confirm("RESET CENTRAL DATABASE? Semua transaksi Visitor dan Key Loan di Spreadsheet akan dihapus. Header dan format Spreadsheet tetap dipertahankan."))return;if(!confirm("KONFIRMASI TERAKHIR: hapus data CENTRAL untuk SEMUA DEVICE?"))return;rc.disabled=true;try{await window.HVSS_RESET_CENTRAL();alert("CENTRAL DATABASE sudah di-reset. Semua device akan mengambil data kosong dari CENTRAL.")}catch(e){alert("Reset CENTRAL gagal: "+(e.message||e))}finally{rc.disabled=false}};
 });
 </script>
-
 <script>
 window.HVSS_EXPORT_OFFICIAL=function(){
  if(!window.XLSX){alert("Excel engine belum siap.");return}
