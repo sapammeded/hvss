@@ -15,6 +15,7 @@
  body{background:#fff!important}.top,.no-print,.footer{display:none!important}.wrap{max-width:none;padding:0}.page{display:none!important}.page.printable{display:block!important}.reporthead{display:block;border-bottom:2px solid #162033;padding-bottom:8px;margin-bottom:10px}.reporthead h1{font-size:18px;margin:0}.reporthead p{margin:3px 0;font-size:10px;color:#667085}.card{box-shadow:none;border:0;padding:0;margin:0 0 10px}.tablewrap{overflow:visible;border:1px solid #cfd7e4}.table{min-width:0;width:100%}.table th,.table td{font-size:8px;padding:5px 4px}.table th{background:#eef2f6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.badge{font-size:7px;padding:2px 4px}.summarybox{border:1px solid #cfd7e4}.summarybox b{font-size:14px}.actions{display:none!important}
 }
 @media print{#createdByMbahPri{display:none!important}}
+.field textarea{min-height:64px;resize:vertical;}
 </style>
 
 <style>
@@ -143,7 +144,7 @@ window.HVSS_KEY_HEADERS=["No", "Date Out", "Time Out", "Borrower", "Division", "
  </div>
  <div class="card">
   <div class="head"><div><h2>Bulk Visitor Entry</h2><div class="muted">Ratusan nama sekaligus • Company/PT bisa sama</div></div></div>
-  <div class="notice">Isi <b>Company / PT</b> sekali. Masukkan 1 nama per baris. Format: <b>Nama No ID Card</b> (contoh: Andi 0098). Bisa juga pakai <b>Nama | ID</b>. Sistem membuat setiap baris menjadi record visitor terpisah.</div>
+  <div class="notice">Isi <b>Company / PT</b> sekali. Masukkan 1 nama per baris. Remark di atas berlaku untuk semua record batch. Format: <b>Nama No ID Card</b> (contoh: Andi 0098). Bisa juga pakai <b>Nama | ID</b>. Sistem membuat setiap baris menjadi record visitor terpisah.</div>
   <div class="formgrid">
    <div class="field"><label>Date *</label><input id="bvDate" type="date"></div>
    <div class="field"><label>Company / PT *</label><input id="bvCompany" placeholder="PT Contoh Indonesia"></div>
@@ -151,6 +152,7 @@ window.HVSS_KEY_HEADERS=["No", "Date Out", "Time Out", "Borrower", "Division", "
    <div class="field"><label>Time Out</label><input id="bvOut" type="time"></div>
    <div class="field"><label>Purpose / Activity</label><input id="bvPurpose"></div>
    <div class="field"><label>Area</label><input id="bvArea"></div>
+   <div class="field span2"><label>Remark</label><textarea id="bvRemark" rows="2" placeholder="Contoh: Meeting vendor / Delivery document / Maintenance"></textarea></div>
    <div class="field span2"><label>Nama / ID Card (1 orang per baris)</label><textarea id="bvNames" rows="7" placeholder="Andi Saputra | ID001
 Budi Santoso | ID002
 Citra Dewi | ID003"></textarea></div>
@@ -195,12 +197,13 @@ Citra Dewi | ID003"></textarea></div>
  </div>
  <div class="card">
   <div class="head"><div><h2>Bulk Key Loan Entry</h2><div class="muted">Banyak peminjam / key sekaligus dengan data OUT yang sama</div></div></div>
-  <div class="notice">Isi tanggal, jam, divisi dan security sekali. Masukkan <b>1 transaksi per baris</b>. Format: <b>Nama Peminjam | Nama Kunci | Key Number</b>.</div>
+  <div class="notice">Isi tanggal, jam, divisi dan security sekali. Masukkan <b>1 transaksi per baris</b>. Remark OUT di atas berlaku untuk semua transaksi batch. Format: <b>Nama Peminjam | Nama Kunci | Key Number</b>.</div>
   <div class="formgrid">
    <div class="field"><label>Date OUT *</label><input id="bkDate" type="date"></div>
    <div class="field"><label>Jam OUT *</label><input id="bkTime" type="time"></div>
    <div class="field"><label>Divisi</label><input id="bkDivision"></div>
    <div class="field"><label>Security</label><input id="bkSecurity"></div>
+   <div class="field span2"><label>Remark OUT</label><textarea id="bkRemark" rows="2" placeholder="Contoh: Dipinjam untuk maintenance / pekerjaan area"></textarea></div>
    <div class="field span2"><label>Nama Peminjam | Nama Kunci | Key Number</label><textarea id="bkLines" rows="7" placeholder="Andi | Master Key | K-001
 Budi | Server Room | K-002
 Citra | Office | K-003"></textarea></div>
@@ -284,29 +287,32 @@ function splitBulkLine(line){
   const m=line.match(/^(.*?)\s+([A-Za-z0-9][A-Za-z0-9._\/-]*)$/);
   return m?[m[1].trim(),m[2].trim()]:[line.trim()];
 }
-function resetBulkVisitor(){ $("bvDate").value=today(); $("bvCompany").value=""; $("bvIn").value=""; $("bvOut").value=""; $("bvPurpose").value=""; $("bvArea").value=""; $("bvNames").value="" }
+function resetBulkVisitor(){ $("bvDate").value=today(); $("bvCompany").value=""; $("bvIn").value=""; $("bvOut").value=""; $("bvPurpose").value=""; $("bvArea").value=""; $("bvRemark").value=""; $("bvNames").value="" }
 $("bvReset").onclick=resetBulkVisitor;
 $("bvAdd").onclick=function(){
- const date=$("bvDate").value||today(), company=$("bvCompany").value.trim();
+ const date=$("bvDate").value||today(), company=$("bvCompany").value.trim(), remark=$("bvRemark").value.trim();
  const lines=$("bvNames").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  if(!company)return alert("Company / PT wajib diisi.");
  if(!lines.length)return alert("Masukkan minimal 1 nama.");
  const created=[];
- lines.forEach(line=>{const p=splitBulkLine(line),name=p[0]||"",idcard=p[1]||"";if(name)created.push({id:uid(),date,name,company,idcard,timeIn:$("bvIn").value,timeOut:$("bvOut").value,purpose:$("bvPurpose").value.trim(),area:$("bvArea").value.trim(),remark:""})});
+ lines.forEach(line=>{
+   const p=splitBulkLine(line),name=p[0]||"",idcard=p[1]||"";
+   if(name)created.push({id:uid(),date,name,company,idcard,timeIn:$("bvIn").value,timeOut:$("bvOut").value,purpose:$("bvPurpose").value.trim(),area:$("bvArea").value.trim(),remark});
+ });
  if(!created.length)return alert("Tidak ada nama valid.");
  db.visitors.push(...created);persist();alert(created.length+" visitor berhasil ditambahkan.");resetBulkVisitor();go("visitor");
 };
 
 function resetKey(){$("keyForm").reset();$("kEdit").value="";$("kOutDate").value=today();$("kOutTime").value=now()}
 $("kReset").onclick=resetKey;$("kOutNow").onclick=()=>{$("kOutTime").value=now()};
-function resetBulkKey(){ $("bkDate").value=today(); $("bkTime").value=now(); $("bkDivision").value=""; $("bkSecurity").value=""; $("bkLines").value="" }
+function resetBulkKey(){ $("bkDate").value=today(); $("bkTime").value=now(); $("bkDivision").value=""; $("bkSecurity").value=""; $("bkRemark").value=""; $("bkLines").value="" }
 $("bkReset").onclick=resetBulkKey;
 $("bkAdd").onclick=function(){
- const date=$("bkDate").value||today(),time=$("bkTime").value||now(),division=$("bkDivision").value.trim(),security=$("bkSecurity").value.trim();
+ const date=$("bkDate").value||today(),time=$("bkTime").value||now(),division=$("bkDivision").value.trim(),security=$("bkSecurity").value.trim(),remark=$("bkRemark").value.trim();
  const lines=$("bkLines").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  if(!lines.length)return alert("Masukkan minimal 1 transaksi key.");
  const created=[];
- lines.forEach(line=>{const p=splitBulkLine(line),borrower=p[0]||"",keyName=p[1]||"",keyNumber=p[2]||"";if(borrower&&keyName)created.push({id:uid(),outDate:date,outTime:time,borrower,division,security,keyName,keyNumber,remark:"",inDate:"",inTime:"",returner:"",inDivision:"",inSecurity:"",note:""})});
+ lines.forEach(line=>{const p=splitBulkLine(line),borrower=p[0]||"",keyName=p[1]||"",keyNumber=p[2]||"";if(borrower&&keyName)created.push({id:uid(),outDate:date,outTime:time,borrower,division,security,keyName,keyNumber,remark,inDate:"",inTime:"",returner:"",inDivision:"",inSecurity:"",note:""})});
  if(!created.length)return alert("Format tidak valid. Gunakan: Nama | Nama Kunci | Key Number");
  const activeNumbers=new Set(db.keys.filter(x=>!x.inDate&&x.keyNumber).map(x=>String(x.keyNumber).toUpperCase()));
  const conflicts=created.filter(x=>x.keyNumber&&activeNumbers.has(String(x.keyNumber).toUpperCase()));
@@ -609,108 +615,6 @@ window.HVSS_EXPORT_OFFICIAL=function(){
  XLSX.writeFile(wb,"HVSS_OFFICIAL_"+new Date().toISOString().slice(0,10)+".xlsx");
 };
 </script>
-<script id="HVSS_BULK_REMARK">
-window.parseHVSSBulkLine=function(line,company){
-  line=String(line||"").trim();
-  if(!line)return null;
-  const pipe=line.indexOf("|");
-  let left=pipe>=0?line.slice(0,pipe).trim():line;
-  let remark=pipe>=0?line.slice(pipe+1).trim():"";
-  const p=left.split(/\s+/);
-  let idIndex=-1;
-  for(let i=0;i<p.length;i++){ if(/^\d+$/.test(p[i])){idIndex=i;break;} }
-  if(idIndex>=0){
-    if(!remark && idIndex<p.length-1) remark=p.slice(idIndex+1).join(" ");
-    left=p.slice(0,idIndex).join(" ");
-    return {name:left,idcard:p[idIndex],company:String(company||""),remark:remark};
-  }
-  return {name:left,idcard:"",company:String(company||""),remark:remark};
-};
-</script>
-<section <section id="HVSS_BULK_REMARK_UI" style="margin:12px 0;padding:14px;border:1px solid #d6dee8;border-radius:10px">
-  <strong style="display:block;margin-bottom:8px">ADD BULK VISITOR</strong>
-
-  <label style="display:block;font-size:12px;font-weight:600;margin:6px 0 4px">
-    PT / COMPANY
-  </label>
-  <input id="hvssBulkCompany" type="text"
-    placeholder="Contoh: PT ABC"
-    style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px">
-
-  <label style="display:block;font-size:12px;font-weight:600;margin:6px 0 4px">
-    DAFTAR VISITOR
-  </label>
-  <textarea id="hvssBulkText" rows="6"
-    placeholder="Andi 0098&#10;Dika 0034&#10;Budi Santoso 0156"
-    style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px"></textarea>
-
-  <label style="display:block;font-size:12px;font-weight:600;margin:6px 0 4px">
-    REMARK
-  </label>
-  <textarea id="hvssBulkRemark" rows="3"
-    placeholder="Contoh: Meeting vendor / Delivery document / Maintenance"
-    style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px"></textarea>
-
-  <div style="font-size:11px;margin:4px 0 8px">
-    Remark ini akan diterapkan ke seluruh visitor dalam batch.
-  </div>
-
-  <button id="hvssBulkAdd" type="button">ADD BULK VISITORS</button>
-  <div id="hvssBulkResult" style="font-size:12px;margin-top:7px"></div>
-</section>
-<script>
-<script id="HVSS_BULK_REMARK_HANDLER">
-document.addEventListener("DOMContentLoaded",function(){
-  const btn=document.getElementById("hvssBulkAdd");
-  if(!btn)return;
-
-  btn.onclick=function(){
-    const company=(document.getElementById("hvssBulkCompany").value||"").trim();
-    const text=document.getElementById("hvssBulkText").value||"";
-    const defaultRemark=(document.getElementById("hvssBulkRemark").value||"").trim();
-    const lines=text.split(/?
-/).map(s=>s.trim()).filter(Boolean);
-
-    if(!lines.length){alert("Isi daftar visitor terlebih dahulu.");return}
-    if(typeof db==="undefined"||!Array.isArray(db.visitors)){
-      alert("Database visitor HVSS tidak ditemukan.");return;
-    }
-
-    const now=new Date();
-    const date=now.toISOString().slice(0,10);
-    const tm=now.toTimeString().slice(0,5);
-
-    const rows=lines.map(function(line){
-      const p=window.parseHVSSBulkLine(line,company)||{};
-      // Individual remark after "|" overrides the batch Remark field.
-      if(!p.remark)p.remark=defaultRemark;
-      return p;
-    });
-
-    rows.forEach(function(p,i){
-      db.visitors.push({
-        id:"V"+Date.now()+"_"+i,
-        date:date,
-        timeIn:tm,
-        timeOut:"",
-        name:p.name||"",
-        company:p.company||company,
-        idcard:p.idcard||"",
-        purpose:"",
-        area:"",
-        remark:p.remark||"",
-        status:"INSIDE"
-      });
-    });
-
-    if(typeof saveDB==="function")saveDB();
-    if(typeof render==="function")render();
-
-    const result=document.getElementById("hvssBulkResult");
-    if(result)result.textContent="✓ "+rows.length+" visitor ditambahkan dengan Remark.";
-  };
-});
-</script>
 <script id="HVSS_EXPORT_OFFICIAL">
 window.HVSS_EXPORT_OFFICIAL=function(){
   if(!window.XLSX){alert("Excel engine belum siap. Refresh halaman.");return}
@@ -749,41 +653,5 @@ document.addEventListener("DOMContentLoaded",function(){
    }finally{b.disabled=false}
  };
 });
-</script><script id="HVSS_BULK_PARSER_FINAL">
-window.parseHVSSBulkLine=function(line,company){
-  line=String(line||"").trim();
-  if(!line)return null;
-
-  const parts=line.split("|");
-  const left=parts.shift().trim();
-  const lineRemark=parts.join("|").trim();
-
-  const tokens=left.split(/\s+/);
-  let idIndex=-1;
-  for(let i=0;i<tokens.length;i++){
-    if(/^\d+$/.test(tokens[i])){idIndex=i;break;}
-  }
-
-  let name=left,idcard="";
-  if(idIndex>=0){
-    idcard=tokens[idIndex];
-    name=tokens.slice(0,idIndex).join(" ");
-    if(!lineRemark && idIndex<tokens.length-1){
-      return {
-        name:name,
-        idcard:idcard,
-        company:String(company||""),
-        remark:tokens.slice(idIndex+1).join(" ")
-      };
-    }
-  }
-
-  return {
-    name:name,
-    idcard:idcard,
-    company:String(company||""),
-    remark:lineRemark
-  };
-};
 </script></body>
 </html>
