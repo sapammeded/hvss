@@ -7,21 +7,39 @@ const KEY_HEADERS=["No","Date Out","Time Out","Borrower","Division","Security","
 function doGet(e){
   try{
     const action=(e&&e.parameter&&e.parameter.action)||"health";
-    if(action==="getAll") return json_(getAll_());
-    if(action==="setupCentral") return json_(setup_());
-    if(action==="health") return json_({ok:true,service:"HVSS2",spreadsheetId:SPREADSHEET_ID});
-    return json_({ok:true,service:"HVSS2",spreadsheetId:SPREADSHEET_ID});
-  }catch(err){return json_({ok:false,error:String(err)});}
+    let out;
+    if(action==="getAll") out=getAll_();
+    else if(action==="setupCentral") out=setup_();
+    else out={ok:true,service:"HVSS2",spreadsheetId:SPREADSHEET_ID};
+    const cb=e&&e.parameter&&e.parameter.callback;
+    return cb ? jsonp_(out,cb) : json_(out);
+  }catch(err){
+    const out={ok:false,error:String(err)};
+    const cb=e&&e.parameter&&e.parameter.callback;
+    return cb ? jsonp_(out,cb) : json_(out);
+  }
 }
 
 function doPost(e){
   try{
-    const raw=(e&&e.postData&&e.postData.contents)||"{}";
-    const p=JSON.parse(raw);
+    // Supports both raw JSON POST and HTML form POST from GitHub Pages.
+    let raw=(e&&e.postData&&e.postData.contents)||"";
+    let p={};
+    if(raw){
+      try{p=JSON.parse(raw)}catch(ignore){p={};}
+    }
+    if(!p.action && e && e.parameter){
+      if(e.parameter.payload){
+        try{p=JSON.parse(e.parameter.payload)}catch(ignore){p={};}
+      }else{
+        p=e.parameter;
+      }
+    }
     if(p.action==="setupCentral") return json_(setup_());
     if(p.action==="syncAll") return json_(syncAll_(p));
     if(p.action==="addVisitor") return json_(addVisitor_(p.visitor||{}));
     if(p.action==="addKey") return json_(addKey_(p.key||{}));
+    if(p.action==="resetCentral") return json_(resetCentral_());
     return json_({ok:false,error:"Unknown action: "+p.action});
   }catch(err){return json_({ok:false,error:String(err),stack:err.stack||""});}
 }
@@ -94,6 +112,20 @@ function syncAll_(p){
   }finally{lock.releaseLock();}
 }
 
+function resetCentral_(){
+  const lock=LockService.getScriptLock();
+  lock.waitLock(30000);
+  try{
+    const ss=ss_();
+    const v=ensure_(ss,VISITOR_SHEET,VISITOR_HEADERS);
+    const k=ensure_(ss,KEY_SHEET,KEY_HEADERS);
+    if(v.getLastRow()>1) v.getRange(2,1,v.getLastRow()-1,VISITOR_HEADERS.length).clearContent();
+    if(k.getLastRow()>1) k.getRange(2,1,k.getLastRow()-1,KEY_HEADERS.length).clearContent();
+    SpreadsheetApp.flush();
+    return {ok:true,visitorCount:0,keyCount:0,message:"Central database reset. Header dan format Spreadsheet dipertahankan."};
+  }finally{lock.releaseLock();}
+}
+
 function getAll_(){
   const ss=ss_();
   const v=ensure_(ss,VISITOR_SHEET,VISITOR_HEADERS);
@@ -115,4 +147,8 @@ function rows_(sh,headers){
 
 function json_(o){
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+function jsonp_(o,cb){
+  if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(String(cb||""))) return json_({ok:false,error:"Invalid callback"});
+  return ContentService.createTextOutput(String(cb)+"("+JSON.stringify(o)+")").setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
