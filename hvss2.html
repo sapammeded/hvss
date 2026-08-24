@@ -52,7 +52,7 @@ window.HVSS_CENTRAL_CONFIG = {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script id="HVSS_CENTRAL_CONFIG">
 window.HVSS_CENTRAL = {
   spreadsheetId: "1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA",
-  gasUrl: "https://script.google.com/macros/s/AKfycby6bDE0-mo6-DEOvcQQJlSBLr10Wf5O7_X8z9Me3qxLp9BrxUwDZaBTDsW9n7zcPhKo1Q/exec",
+  gasUrl: "https://script.google.com/macros/s/AKfycbzpbab3_fYUaDGQpooOvK_uhp6IvXhojeua4-3YQ4hMAzJwYTePGkts8hUmoCiyKLyGjQ/exec",
   visitorSheet: "Visitor Registration",
   keySheet: "Key Loan"
 };
@@ -627,37 +627,87 @@ window.parseHVSSBulkLine=function(line,company){
   return {name:left,idcard:"",company:String(company||""),remark:remark};
 };
 </script>
-<section id="HVSS_BULK_REMARK_UI" style="margin:12px 0;padding:12px;border:1px solid #d6dee8;border-radius:10px">
-  <strong>Bulk Visitor Registration</strong>
-  <div style="font-size:12px;margin:5px 0 8px">Format: <code>Andi 0098 | Meeting vendor</code></div>
-  <input id="hvssBulkCompany" type="text" placeholder="PT / Company untuk semua orang" style="width:100%;box-sizing:border-box;padding:8px;margin:4px 0">
-  <textarea id="hvssBulkText" rows="6" placeholder="Andi 0098 | Meeting vendor&#10;Dika 0034 | Delivery document&#10;Budi Santoso 0156 | Maintenance" style="width:100%;box-sizing:border-box;padding:8px;margin:4px 0"></textarea>
+<section <section id="HVSS_BULK_REMARK_UI" style="margin:12px 0;padding:14px;border:1px solid #d6dee8;border-radius:10px">
+  <strong style="display:block;margin-bottom:8px">ADD BULK VISITOR</strong>
+
+  <label style="display:block;font-size:12px;font-weight:600;margin:6px 0 4px">
+    PT / COMPANY
+  </label>
+  <input id="hvssBulkCompany" type="text"
+    placeholder="Contoh: PT ABC"
+    style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px">
+
+  <label style="display:block;font-size:12px;font-weight:600;margin:6px 0 4px">
+    DAFTAR VISITOR
+  </label>
+  <textarea id="hvssBulkText" rows="6"
+    placeholder="Andi 0098&#10;Dika 0034&#10;Budi Santoso 0156"
+    style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px"></textarea>
+
+  <label style="display:block;font-size:12px;font-weight:600;margin:6px 0 4px">
+    REMARK
+  </label>
+  <textarea id="hvssBulkRemark" rows="3"
+    placeholder="Contoh: Meeting vendor / Delivery document / Maintenance"
+    style="width:100%;box-sizing:border-box;padding:9px;margin:0 0 8px"></textarea>
+
+  <div style="font-size:11px;margin:4px 0 8px">
+    Remark ini akan diterapkan ke seluruh visitor dalam batch.
+  </div>
+
   <button id="hvssBulkAdd" type="button">ADD BULK VISITORS</button>
-  <div id="hvssBulkResult" style="font-size:12px;margin-top:6px"></div>
+  <div id="hvssBulkResult" style="font-size:12px;margin-top:7px"></div>
 </section>
 <script>
+<script id="HVSS_BULK_REMARK_HANDLER">
 document.addEventListener("DOMContentLoaded",function(){
   const btn=document.getElementById("hvssBulkAdd");
   if(!btn)return;
+
   btn.onclick=function(){
     const company=(document.getElementById("hvssBulkCompany").value||"").trim();
     const text=document.getElementById("hvssBulkText").value||"";
-    const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-    if(!lines.length){alert("Isi daftar visitor.");return}
-    if(typeof db==="undefined"||!Array.isArray(db.visitors)){alert("Database visitor HVSS tidak ditemukan.");return}
-    const now=new Date(), date=now.toISOString().slice(0,10), tm=now.toTimeString().slice(0,5);
-    const rows=lines.map(s=>window.parseHVSSBulkLine(s,company));
-    rows.forEach((p,i)=>{
+    const defaultRemark=(document.getElementById("hvssBulkRemark").value||"").trim();
+    const lines=text.split(/?
+/).map(s=>s.trim()).filter(Boolean);
+
+    if(!lines.length){alert("Isi daftar visitor terlebih dahulu.");return}
+    if(typeof db==="undefined"||!Array.isArray(db.visitors)){
+      alert("Database visitor HVSS tidak ditemukan.");return;
+    }
+
+    const now=new Date();
+    const date=now.toISOString().slice(0,10);
+    const tm=now.toTimeString().slice(0,5);
+
+    const rows=lines.map(function(line){
+      const p=window.parseHVSSBulkLine(line,company)||{};
+      // Individual remark after "|" overrides the batch Remark field.
+      if(!p.remark)p.remark=defaultRemark;
+      return p;
+    });
+
+    rows.forEach(function(p,i){
       db.visitors.push({
         id:"V"+Date.now()+"_"+i,
-        date:date,timeIn:tm,timeOut:"",
-        name:p.name,company:p.company,idcard:p.idcard,
-        purpose:"",area:"",remark:p.remark,status:"INSIDE"
+        date:date,
+        timeIn:tm,
+        timeOut:"",
+        name:p.name||"",
+        company:p.company||company,
+        idcard:p.idcard||"",
+        purpose:"",
+        area:"",
+        remark:p.remark||"",
+        status:"INSIDE"
       });
     });
+
     if(typeof saveDB==="function")saveDB();
     if(typeof render==="function")render();
-    document.getElementById("hvssBulkResult").textContent="✓ "+rows.length+" visitor siap disimpan. Klik SYNC CENTRAL DATABASE.";
+
+    const result=document.getElementById("hvssBulkResult");
+    if(result)result.textContent="✓ "+rows.length+" visitor ditambahkan dengan Remark.";
   };
 });
 </script>
@@ -699,5 +749,41 @@ document.addEventListener("DOMContentLoaded",function(){
    }finally{b.disabled=false}
  };
 });
+</script><script id="HVSS_BULK_PARSER_FINAL">
+window.parseHVSSBulkLine=function(line,company){
+  line=String(line||"").trim();
+  if(!line)return null;
+
+  const parts=line.split("|");
+  const left=parts.shift().trim();
+  const lineRemark=parts.join("|").trim();
+
+  const tokens=left.split(/\s+/);
+  let idIndex=-1;
+  for(let i=0;i<tokens.length;i++){
+    if(/^\d+$/.test(tokens[i])){idIndex=i;break;}
+  }
+
+  let name=left,idcard="";
+  if(idIndex>=0){
+    idcard=tokens[idIndex];
+    name=tokens.slice(0,idIndex).join(" ");
+    if(!lineRemark && idIndex<tokens.length-1){
+      return {
+        name:name,
+        idcard:idcard,
+        company:String(company||""),
+        remark:tokens.slice(idIndex+1).join(" ")
+      };
+    }
+  }
+
+  return {
+    name:name,
+    idcard:idcard,
+    company:String(company||""),
+    remark:lineRemark
+  };
+};
 </script></body>
 </html>
