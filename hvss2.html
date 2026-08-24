@@ -53,7 +53,7 @@ window.HVSS_CENTRAL_CONFIG = {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script id="HVSS_CENTRAL_CONFIG">
 window.HVSS_CENTRAL = {
   spreadsheetId: "1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA",
-  gasUrl: "https://script.google.com/macros/s/AKfycbyv9ILqh7T38jOtPuT_0S4MEEuPLvoUQM5-idBaDTK5XVN4kUwxomhjT3CNlQ9tGZ6zDw/exec",
+  gasUrl: "https://script.google.com/macros/s/AKfycbzHERM0A_21emHTJvbxx9fNAwtA9clTrC5482xKiHLrOrkhQ5cFPBucAvVGnRa2te3rBg/exec",
   visitorSheet: "Visitor Registration",
   keySheet: "Key Loan"
 };
@@ -241,7 +241,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const today=()=>{let d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const now=()=>new Date().toTimeString().slice(0,5);
-const normIdCard=v=>{v=String(v==null?"":v).trim();return /^\d{1,4}$/.test(v)?v.padStart(4,"0"):v};
+const normIdCard=v=>String(v==null?"":v).trim();
 const normTime=v=>{v=String(v==null?"":v).trim();if(!v)return "";const m=v.match(/^(\d{1,2}):(\d{1,2})/);return m?String(parseInt(m[1],10)).padStart(2,"0")+":"+String(parseInt(m[2],10)).padStart(2,"0"):v};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
 function persist(){
