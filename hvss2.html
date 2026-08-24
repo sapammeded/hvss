@@ -49,7 +49,14 @@ window.HVSS_CENTRAL_CONFIG = {
   keyHeaders: ["No","Date Out","Time Out","Borrower","Division","Security","Key Name","Key Number","Date In","Time In","Returner","Status"]
 };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script id="HVSS_CENTRAL_CONFIG">
+window.HVSS_CENTRAL = {
+  spreadsheetId: "1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA",
+  gasUrl: "https://script.google.com/macros/s/AKfycbxvb-Px3Gw3cKhjGgp9Ic2N6k5wk_uwvO0tDkRpEQX5-ciPHJ7MZJKo2Zf0oyccQd9HCA/exec",
+  visitorSheet: "Visitor Registration",
+  keySheet: "Key Loan"
+};
+</script></head>
 <body>
 <div class="app">
 <div id="createdByMbahPri">CREATED BY: Mbah Pri</div>
@@ -205,7 +212,7 @@ Citra | Office | K-003"></textarea></div>
 </div>
 
 <script>
-const GAS_API_URL="https://script.google.com/macros/s/AKfycbw61ybw2jyxH7n3Ft9goUna8Itosm7yOvExbhRDDGfoIS_KdRfd_egQkuezspsjbFyG7Q/exec";
+const GAS_API_URL="https://script.google.com/macros/s/AKfycbzpbab3_fYUaDGQpooOvK_uhp6IvXhojeua4-3YQ4hMAzJwYTePGkts8hUmoCiyKLyGjQ/exec";
 (function(){
 "use strict";
 const KEY="HVSS_SCC_V5_PRO";
@@ -542,5 +549,77 @@ window.HVSS_SYNC_PAYLOAD=function(){
   };
 };
 </script>
-</body>
+
+<script id="HVSS_CENTRAL_BRIDGE">
+(function(){
+  const C=window.HVSS_CENTRAL;
+
+  async function postCentral(payload){
+    const body=Object.assign({
+      spreadsheetId:C.spreadsheetId,
+      source:"HVSS2",
+      clientTime:new Date().toISOString()
+    },payload||{});
+    const r=await fetch(C.gasUrl,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(body),
+      redirect:"follow"
+    });
+    const t=await r.text();
+    let j; try{j=JSON.parse(t)}catch(e){throw new Error("Apps Script returned non-JSON: "+t.slice(0,200))}
+    if(!j.ok) throw new Error(j.error||"Central sync rejected");
+    return j;
+  }
+
+  window.HVSS_CENTRAL_SYNC=async function(){
+    const visitors=(typeof db!=="undefined"&&Array.isArray(db.visitors))?db.visitors:[];
+    const keys=(typeof db!=="undefined"&&Array.isArray(db.keys))?db.keys:[];
+    return postCentral({action:"syncAll",visitors,keys});
+  };
+
+  window.HVSS_CENTRAL_SETUP=async function(){
+    return postCentral({action:"setupCentral"});
+  };
+
+  window.HVSS_CENTRAL_ADD_VISITOR=async function(x){
+    return postCentral({action:"addVisitor",visitor:x||{}});
+  };
+
+  window.HVSS_CENTRAL_ADD_KEY=async function(x){
+    return postCentral({action:"addKey",key:x||{}});
+  };
+})();
+</script>
+
+<div id="centralSyncBar" style="display:flex;gap:8px;align-items:center;margin:10px 0">
+<button id="centralSyncBtn" type="button">SYNC CENTRAL DATABASE</button>
+<span id="centralSyncStatus" style="font-size:12px"></span>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+ const b=document.getElementById("centralSyncBtn"),s=document.getElementById("centralSyncStatus");
+ if(b)b.onclick=async function(){
+   b.disabled=true;s.textContent="Syncing...";
+   try{const r=await window.HVSS_CENTRAL_SYNC();s.textContent="✓ "+r.visitorCount+" visitor / "+r.keyCount+" key synced";}
+   catch(e){s.textContent="✕ "+(e.message||e);alert("Central sync gagal: "+(e.message||e));}
+   finally{b.disabled=false}
+ };
+});
+</script>
+<script>
+window.HVSS_EXPORT_OFFICIAL=function(){
+ if(!window.XLSX){alert("Excel engine belum siap.");return}
+ const vs=(typeof db!=="undefined"&&Array.isArray(db.visitors))?db.visitors:[];
+ const ks=(typeof db!=="undefined"&&Array.isArray(db.keys))?db.keys:[];
+ const v=vs.map((x,i)=>[i+1,x.date||"",x.timeIn||"",x.timeOut||"",x.name||"",x.company||"",x.idcard||"",x.purpose||"",x.area||"",x.remark||"",x.timeOut?"OUT":"INSIDE"]);
+ const k=ks.map((x,i)=>[i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inDate?"RETURNED":"KEY OUT"]);
+ const wb=XLSX.utils.book_new();
+ const wsV=XLSX.utils.aoa_to_sheet([window.HVSS_CENTRAL_CONFIG?.visitorHeaders||["No","Date","Time In","Time Out","Name","Company / PT","ID Card","Purpose","Area","Remark","Status"],...v]);
+ const wsK=XLSX.utils.aoa_to_sheet([window.HVSS_CENTRAL_CONFIG?.keyHeaders||["No","Date Out","Time Out","Borrower","Division","Security","Key Name","Key Number","Date In","Time In","Returner","Status"],...k]);
+ XLSX.utils.book_append_sheet(wb,wsV,"Visitor Registration");
+ XLSX.utils.book_append_sheet(wb,wsK,"Key Loan");
+ XLSX.writeFile(wb,"HVSS_OFFICIAL_"+new Date().toISOString().slice(0,10)+".xlsx");
+};
+</script></body>
 </html>

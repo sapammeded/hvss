@@ -6,52 +6,88 @@ const VISITOR_HEADERS = ["No", "Date", "Time In", "Time Out", "Name", "Company /
 const KEY_HEADERS = ["No", "Date Out", "Time Out", "Borrower", "Division", "Security", "Key Name", "Key Number", "Date In", "Time In", "Returner", "Status"];
 
 function doGet() {
-  return ContentService.createTextOutput(JSON.stringify({ok:true,service:"HVSS",spreadsheetId:SPREADSHEET_ID}))
-    .setMimeType(ContentService.MimeType.JSON);
+  return json_({ok:true,service:"HVSS2",spreadsheetId:SPREADSHEET_ID});
 }
 
 function doPost(e) {
   try {
-    const p = JSON.parse(e.postData.contents || "{}");
-    if (p.action === "setupCentral") return json_(setupCentral_());
-    if (p.action === "syncAll") return json_(syncAll_(p));
-    return json_({ok:false,error:"Unknown action"});
+    const p=JSON.parse((e.postData&&e.postData.contents)||"{}");
+    if(p.action==="setupCentral") return json_(setupCentral_());
+    if(p.action==="syncAll") return json_(syncAll_(p));
+    if(p.action==="addVisitor") return json_(addVisitor_(p.visitor||{}));
+    if(p.action==="addKey") return json_(addKey_(p.key||{}));
+    return json_({ok:false,error:"Unknown action: "+p.action});
   } catch(err) {
-    return json_({ok:false,error:String(err)});
+    return json_({ok:false,error:String(err),stack:err.stack||""});
   }
 }
 
-function setupCentral_() {
-  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
-  const v=getOrCreate_(ss,VISITOR_SHEET,VISITOR_HEADERS);
-  const k=getOrCreate_(ss,KEY_SHEET,KEY_HEADERS);
-  return {ok:true,visitorSheet:v.getName(),keySheet:k.getName(),spreadsheetId:SPREADSHEET_ID};
+function ss_() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
 }
 
-function getOrCreate_(ss,name,headers) {
+function sheet_(ss,name,headers) {
   let sh=ss.getSheetByName(name);
   if(!sh) sh=ss.insertSheet(name);
-  sh.clearContents();
-  sh.getRange(1,1,1,headers.length).setValues([headers]);
+  if(sh.getLastRow()===0) sh.getRange(1,1,1,headers.length).setValues([headers]);
+  else {
+    const current=sh.getRange(1,1,1,headers.length).getValues()[0];
+    if(JSON.stringify(current)!==JSON.stringify(headers))
+      sh.getRange(1,1,1,headers.length).setValues([headers]);
+  }
   sh.setFrozenRows(1);
   return sh;
 }
 
+function setupCentral_() {
+  const ss=ss_();
+  const v=sheet_(ss,VISITOR_SHEET,VISITOR_HEADERS);
+  const k=sheet_(ss,KEY_SHEET,KEY_HEADERS);
+  return {ok:true,visitorSheet:v.getName(),keySheet:k.getName()};
+}
+
+function addVisitor_(x) {
+  const sh=sheet_(ss_(),VISITOR_SHEET,VISITOR_HEADERS);
+  const row=sh.getLastRow();
+  const no=Math.max(1,row);
+  sh.appendRow([no,x.date||"",x.timeIn||"",x.timeOut||"",x.name||"",x.company||"",
+    x.idcard||"",x.purpose||"",x.area||"",x.remark||"",x.timeOut?"OUT":"INSIDE"]);
+  return {ok:true,sheet:VISITOR_SHEET,row:sh.getLastRow()};
+}
+
+function addKey_(x) {
+  const sh=sheet_(ss_(),KEY_SHEET,KEY_HEADERS);
+  const no=Math.max(1,sh.getLastRow());
+  sh.appendRow([no,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",
+    x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inDate?"RETURNED":"KEY OUT"]);
+  return {ok:true,sheet:KEY_SHEET,row:sh.getLastRow()};
+}
+
 function syncAll_(p) {
-  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
-  const v=getOrCreate_(ss,VISITOR_SHEET,VISITOR_HEADERS);
-  const k=getOrCreate_(ss,KEY_SHEET,KEY_HEADERS);
-  const visitors=Array.isArray(p.visitors)?p.visitors:[];
-  const keys=Array.isArray(p.keys)?p.keys:[];
-  if(visitors.length) v.getRange(2,1,visitors.length,VISITOR_HEADERS.length).setValues(
-    visitors.map((x,i)=>[i+1,x.date||"",x.timeIn||"",x.timeOut||"",x.name||"",x.company||"",x.idcard||"",x.purpose||"",x.area||"",x.remark||"",x.timeOut?"OUT":"INSIDE"])
-  );
-  if(keys.length) k.getRange(2,1,keys.length,KEY_HEADERS.length).setValues(
-    keys.map((x,i)=>[i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inDate?"RETURNED":"KEY OUT"])
-  );
-  return {ok:true,visitorCount:visitors.length,keyCount:keys.length};
+  const ss=ss_();
+  const vs=Array.isArray(p.visitors)?p.visitors:[];
+  const ks=Array.isArray(p.keys)?p.keys:[];
+  const v=sheet_(ss,VISITOR_SHEET,VISITOR_HEADERS);
+  const k=sheet_(ss,KEY_SHEET,KEY_HEADERS);
+
+  // Rebuild only these two operational sheets from the current HVSS dataset.
+  if(v.getLastRow()>1) v.getRange(2,1,v.getLastRow()-1,VISITOR_HEADERS.length).clearContent();
+  if(k.getLastRow()>1) k.getRange(2,1,k.getLastRow()-1,KEY_HEADERS.length).clearContent();
+
+  if(vs.length) v.getRange(2,1,vs.length,VISITOR_HEADERS.length).setValues(vs.map((x,i)=>[
+    i+1,x.date||"",x.timeIn||"",x.timeOut||"",x.name||"",x.company||"",x.idcard||"",
+    x.purpose||"",x.area||"",x.remark||"",x.timeOut?"OUT":"INSIDE"
+  ]));
+
+  if(ks.length) k.getRange(2,1,ks.length,KEY_HEADERS.length).setValues(ks.map((x,i)=>[
+    i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||"",
+    x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inDate?"RETURNED":"KEY OUT"
+  ]));
+
+  return {ok:true,visitorCount:vs.length,keyCount:ks.length};
 }
 
 function json_(o) {
-  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(o))
+    .setMimeType(ContentService.MimeType.JSON);
 }
