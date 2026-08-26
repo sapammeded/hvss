@@ -54,7 +54,7 @@ window.HVSS_CENTRAL_CONFIG = {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script id="HVSS_CENTRAL_CONFIG">
 window.HVSS_CENTRAL = {
   spreadsheetId: "1z8oI95w0JITz9ILxLUjAszg0ijg4qz75huQiwRSkVBA",
-  gasUrl: "https://script.google.com/macros/s/AKfycbzoZK26FagA4GUM_3ueDll2LRtfW4WOUJ-nZJIykUkwn5pq89ABtdvzKLAcyJ8ilYnemw/exec",
+  gasUrl: "https://script.google.com/macros/s/AKfycbwNvGUEqrVBqHa3vkKh20UWEuTAfhgsM4cXznk6sxeUxQARTs5xcoJwzuDwmI61rzwrVg/exec",
   visitorSheet: "Visitor Registration",
   keySheet: "Key Loan"
 };
@@ -343,10 +343,10 @@ $("keyForm").onsubmit=function(e){
  let i=db.keys.findIndex(x=>x.id===o.id);i>=0?db.keys[i]=o:db.keys.push(o);persist();resetKey();go("key");
 };
 function editKey(id){let o=db.keys.find(x=>x.id===id);if(!o)return;let m={kEdit:o.id,kOutDate:dateKey(o.outDate),kOutTime:o.outTime,kBorrower:o.borrower,kDivision:o.division,kSecurity:o.security,kKeyName:o.keyName,kKeyNumber:o.keyNumber,kRemark:o.remark,kInDate:dateKey(o.inDate),kInTime:o.inTime,kReturner:o.returner,kInDivision:o.inDivision,kInSecurity:o.inSecurity,kNote:o.note};Object.keys(m).forEach(k=>$(k).value=m[k]||"");window.scrollTo(0,0)}
-function returnKey(id){let o=db.keys.find(x=>x.id===id);if(!o)return;o.inDate=dateLabel(today());o.inTime=normTime(now());o.returner=o.returner||o.borrower;persist()}
+function returnKey(id){if(window.HVSS_OPEN_RETURN_SECURITY){window.HVSS_OPEN_RETURN_SECURITY(id);return}let o=db.keys.find(x=>x.id===id);if(!o)return;o.inDate=dateLabel(today());o.inTime=normTime(now());o.securityIn=o.securityIn||o.inSecurity||"";persist()}
 $("kReturnLast").onclick=()=>{let a=db.keys.filter(x=>!x.inDate).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));if(!a.length)return alert("Tidak ada key yang sedang OUT.");returnKey(a[0].id)}
 function delKey(id){if(confirm("Hapus transaksi key ini?")){db.keys=db.keys.filter(x=>x.id!==id);persist()}}
-function renderKeys(){let q=($("kSearch").value||"").toLowerCase(),st=$("kStatus").value||"",a=db.keys.filter(x=>(!st||(st==="OUT"?!x.inDate:!!x.inDate))&&(!q||[x.borrower,x.division,x.keyName,x.keyNumber,x.security].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));$("kCount").textContent=a.length+" record(s)";$("keyBody").innerHTML=a.length?a.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(dateLabel(x.outDate))}</td><td>${esc(x.outTime)}</td><td><b>${esc(x.borrower)}</b></td><td>${esc(x.division)}</td><td>${esc(x.security)}</td><td>${esc(x.keyName)}</td><td>${esc(x.keyNumber)}</td><td>${esc(dateLabel(x.inDate))}</td><td>${esc(x.inTime)}</td><td>${esc(x.returner)}</td><td>${esc(x.note||x.remark)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td><td class="no-print">${x.inDate?"":"<button type='button' class='btn success' onclick=\"window.HVSS.returnKey('"+x.id+"')\">Return</button> "}<button type="button" class="btn secondary" onclick="window.HVSS.editKey('${x.id}')">Edit</button> <button type="button" class="btn danger" onclick="window.HVSS.delKey('${x.id}')">Delete</button></td></tr>`).join(""):'<tr><td colspan="14" class="empty">Belum ada transaksi key.</td></tr>'}
+function renderKeys(){let q=($("kSearch").value||"").toLowerCase(),st=$("kStatus").value||"",a=db.keys.filter(x=>(!st||(st==="OUT"?!x.inDate:!!x.inDate))&&(!q||[x.borrower,x.division,x.keyName,x.keyNumber,x.security].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.outDate+b.outTime).localeCompare(a.outDate+a.outTime));$("kCount").textContent=a.length+" record(s)";$("keyBody").innerHTML=a.length?a.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(dateLabel(x.outDate))}</td><td>${esc(x.outTime)}</td><td><b>${esc(x.borrower)}</b></td><td>${esc(x.division)}</td><td>${esc(x.security)}</td><td>${esc(x.keyName)}</td><td>${esc(x.keyNumber)}</td><td>${esc(dateLabel(x.inDate))}</td><td>${esc(x.inTime)}</td><td>${esc(x.securityIn||x.inSecurity||x.returner)}</td><td>${esc(x.note||x.remark)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td><td class="no-print">${x.inDate?"":"<button type='button' class='btn success' onclick=\"window.HVSS_OPEN_RETURN_SECURITY('"+x.id+"')\">Return</button> "}<button type="button" class="btn secondary" onclick="window.HVSS.editKey('${x.id}')">Edit</button> <button type="button" class="btn danger" onclick="window.HVSS.delKey('${x.id}')">Delete</button></td></tr>`).join(""):'<tr><td colspan="14" class="empty">Belum ada transaksi key.</td></tr>'}
 $("kSearch").oninput=renderKeys;$("kStatus").onchange=renderKeys;
 
 function reportData(){let d=$("reportDate").value||today(),v=db.visitors.filter(x=>dateKey(x.date)===d).sort((a,b)=>(a.timeIn||"99:99").localeCompare(b.timeIn||"99:99")),k=db.keys.filter(x=>dateKey(x.outDate)===d||dateKey(x.inDate)===d).sort((a,b)=>(a.outTime||"99:99").localeCompare(b.outTime||"99:99"));return {d,v,k}}
@@ -695,33 +695,28 @@ window.HVSS_EXPORT_OFFICIAL=async function(){
     const c=document.getElementById("hvssReturnCancel");
     const ok=document.getElementById("hvssReturnConfirm");
     if(c)c.onclick=close;
-    if(ok)ok.onclick=function(){
+    if(ok)ok.onclick=async function(){
       const input=document.getElementById("hvssReturnSecurityInput");
       const receiver=(input&&input.value||"").trim();
       if(!receiver){alert("Nama Security yang menerima kunci wajib diisi.");return}
       if(!pendingId)return;
-      const item=(window.HVSS_DB&&Array.isArray(window.HVSS_DB.keys))
-        ? window.HVSS_DB.keys.find(x=>String(x.id)===String(pendingId)) : null;
+      const item=(window.HVSS_DB&&Array.isArray(window.HVSS_DB.keys)) ? window.HVSS_DB.keys.find(x=>String(x.id)===String(pendingId)) : null;
       if(!item){alert("Data key tidak ditemukan.");return}
       const now=new Date();
-      item.inDate=window.HVSS_FORMAT_DATE ? window.HVSS_FORMAT_DATE(now) : now.toLocaleDateString("id-ID");
-      item.inTime=window.HVSS_FORMAT_TIME ? window.HVSS_FORMAT_TIME(now) : now.toTimeString().slice(0,5);
-      item.returner=receiver;
-      item.securityIn=receiver;
-      item.status="RETURNED";
-      if(window.HVSS_CENTRAL_RETURN){
-        try{
-          await window.HVSS_CENTRAL_RETURN({id:item.id,securityIn:receiver,remark:item.remark||""});
-        }catch(e){
-          alert("Return gagal disimpan ke CENTRAL: "+(e.message||e));
-          item.status="KEY OUT"; item.inDate=""; item.inTime=""; item.returner=""; item.securityIn="";
-          return;
-        }
+      const returnDate=window.HVSS_FORMAT_DATE ? window.HVSS_FORMAT_DATE(now) : now.toLocaleDateString("id-ID");
+      const returnTime=window.HVSS_FORMAT_TIME ? window.HVSS_FORMAT_TIME(now) : now.toTimeString().slice(0,5);
+      const old={inDate:item.inDate||"",inTime:item.inTime||"",securityIn:item.securityIn||"",inSecurity:item.inSecurity||"",status:item.status||"",returner:item.returner||""};
+      item.inDate=returnDate; item.inTime=returnTime; item.securityIn=receiver; item.inSecurity=receiver; item.status="RETURNED";
+      try{
+        if(window.HVSS_CENTRAL_RETURN) await window.HVSS_CENTRAL_RETURN({id:item.id,securityIn:receiver,inDate:returnDate,inTime:returnTime});
+        if(typeof window.HVSS_PERSIST==="function")window.HVSS_PERSIST();
+        else {localStorage.setItem("HVSS_SCC_V5_PRO",JSON.stringify(window.HVSS_DB)); if(typeof window.renderAll==='function')window.renderAll();}
+        close();
+        alert("Kunci berhasil RETURN. Security penerima: "+receiver);
+      }catch(e){
+        Object.assign(item,old);
+        alert("Return gagal disimpan ke CENTRAL: "+(e.message||e));
       }
-      if(typeof window.HVSS_PERSIST==="function")window.HVSS_PERSIST();
-      if(typeof window.HVSS_AUTO_SYNC==="function")window.HVSS_AUTO_SYNC();
-      if(typeof window.renderAll==="function")window.renderAll();
-      close();
     };
   });
 })();
@@ -748,7 +743,7 @@ window.HVSS_EXPORT_OFFICIAL=async function(){
     const C=window.HVSS_CENTRAL;
     if(!C||!C.gasUrl)throw new Error("Central URL belum tersedia");
     const r=await fetch(C.gasUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"returnKey",spreadsheetId:C.spreadsheetId,id:p.id,securityIn:p.securityIn,remark:p.remark||""})});
+      body:JSON.stringify({action:"returnKey",spreadsheetId:C.spreadsheetId,id:p.id,securityIn:p.securityIn,inDate:p.inDate||"",inTime:p.inTime||""})});
     const t=await r.text();let d;try{d=JSON.parse(t)}catch(e){throw new Error(t.slice(0,250))}
     if(!d.ok)throw new Error(d.error||"Central return gagal");
     return d;

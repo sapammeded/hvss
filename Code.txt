@@ -80,6 +80,26 @@ function writeMerged_(name,headers,incoming){
   }
   return merged.length;
 }
+
+function updateKeyReturn_(id,securityIn,inDate,inTime){
+  const sh=ensureSheet_(KEY_SHEET,KEY_HEADERS);
+  prepareTextColumns_(sh,KEY_SHEET);
+  const lr=sh.getLastRow();
+  if(lr<2)throw new Error('Key Loan masih kosong');
+  const notes=sh.getRange(2,1,lr-1,1).getNotes();
+  const ids=notes.map(r=>String(r[0]||'').trim());
+  let row=ids.findIndex(x=>x===String(id));
+  if(row<0){
+    const vals=sh.getRange(2,1,lr-1,KEY_HEADERS.length).getDisplayValues();
+    row=vals.findIndex(r=>String(r[0]||'').trim()===String(id));
+  }
+  if(row<0)throw new Error('Record Key Loan tidak ditemukan untuk return');
+  const targetRow=row+2;
+  sh.getRange(targetRow,9,1,8).setValues([[dateLabel_(inDate),normTime_(inTime),sh.getRange(targetRow,11).getDisplayValue()||'',sh.getRange(targetRow,12).getDisplayValue()||'',String(securityIn||''),sh.getRange(targetRow,14).getDisplayValue()||'',sh.getRange(targetRow,15).getDisplayValue()||'','RETURNED']]);
+  sh.getRange(targetRow,1,1,KEY_HEADERS.length).setNumberFormat('@');
+  return {row:targetRow};
+}
+
 function doGet(e){
   try{
     const a=(e.parameter.action||'').toLowerCase(),cb=e.parameter.callback;
@@ -98,6 +118,11 @@ function doPost(e){
       const v=writeMerged_(VISITOR_SHEET,VISITOR_HEADERS,Array.isArray(p.visitors)?p.visitors:[]);
       const k=writeMerged_(KEY_SHEET,KEY_HEADERS,Array.isArray(p.keys)?p.keys:[]);
       return json_({ok:true,visitorCount:v,keyCount:k,serverTime:new Date().toISOString(),message:'CENTRAL VERIFIED'});
+    }
+    if(a==='returnkey'){
+      if(!p.id)throw new Error('ID transaksi key wajib diisi');
+      const r=updateKeyReturn_(p.id,p.securityIn,p.inDate,p.inTime);
+      return json_({ok:true,row:r.row,message:'KEY RETURN UPDATED',securityIn:String(p.securityIn||''),serverTime:new Date().toISOString()});
     }
     if(a==='resetcentral'){
       [[VISITOR_SHEET,VISITOR_HEADERS],[KEY_SHEET,KEY_HEADERS]].forEach(([n,h])=>{const sh=ensureSheet_(n,h);prepareTextColumns_(sh,n);if(sh.getMaxRows()>1){sh.getRange(2,1,sh.getMaxRows()-1,h.length).clearContent();sh.getRange(2,1,sh.getMaxRows()-1,1).clearNote();}});
