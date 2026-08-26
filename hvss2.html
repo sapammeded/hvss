@@ -661,5 +661,98 @@ window.HVSS_EXPORT_OFFICIAL=async function(){
   try{if(window.HVSS_CENTRAL_PULL)await window.HVSS_CENTRAL_PULL();exportWorkbook([{name:"Visitor Registration",rows:makeVisitorRows("")},{name:"Key Loan",rows:makeKeyRows("")}],"HVSS_OFFICIAL_"+today()+".xlsx");}catch(e){alert("Export gagal mengambil CENTRAL: "+(e.message||e));}
 };
 </script>
-</body>
+
+<div id="hvssReturnSecurityModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;align-items:center;justify-content:center">
+  <div style="background:#fff;width:min(92vw,420px);border-radius:12px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.25)">
+    <h3 style="margin:0 0 8px">🔑 RETURN KEY</h3>
+    <div id="hvssReturnKeyInfo" style="font-size:13px;margin-bottom:12px"></div>
+    <label style="font-weight:700;font-size:12px">SECURITY YANG MENERIMA KUNCI</label>
+    <input id="hvssReturnSecurityInput" type="text" autocomplete="off"
+      placeholder="Tulis nama Security penerima"
+      style="width:100%;box-sizing:border-box;padding:10px;margin:6px 0 14px">
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" id="hvssReturnCancel">BATAL</button>
+      <button type="button" id="hvssReturnConfirm">KONFIRMASI RETURN</button>
+    </div>
+  </div>
+</div>
+<script id="HVSS_RETURN_SECURITY_FINAL">
+(function(){
+  let pendingId=null;
+  window.HVSS_OPEN_RETURN_SECURITY=function(id){
+    pendingId=id;
+    const item=(window.HVSS_DB&&Array.isArray(window.HVSS_DB.keys))
+      ? window.HVSS_DB.keys.find(x=>String(x.id)===String(id)) : null;
+    const info=document.getElementById("hvssReturnKeyInfo");
+    if(info) info.textContent=item ? ((item.borrower||"") + " — " + (item.keyName||"") + " / " + (item.keyNumber||"")) : "";
+    const input=document.getElementById("hvssReturnSecurityInput");
+    if(input){input.value="";setTimeout(()=>input.focus(),50)}
+    const modal=document.getElementById("hvssReturnSecurityModal");
+    if(modal)modal.style.display="flex";
+  };
+  function close(){const m=document.getElementById("hvssReturnSecurityModal");if(m)m.style.display="none";pendingId=null}
+  document.addEventListener("DOMContentLoaded",function(){
+    const c=document.getElementById("hvssReturnCancel");
+    const ok=document.getElementById("hvssReturnConfirm");
+    if(c)c.onclick=close;
+    if(ok)ok.onclick=function(){
+      const input=document.getElementById("hvssReturnSecurityInput");
+      const receiver=(input&&input.value||"").trim();
+      if(!receiver){alert("Nama Security yang menerima kunci wajib diisi.");return}
+      if(!pendingId)return;
+      const item=(window.HVSS_DB&&Array.isArray(window.HVSS_DB.keys))
+        ? window.HVSS_DB.keys.find(x=>String(x.id)===String(pendingId)) : null;
+      if(!item){alert("Data key tidak ditemukan.");return}
+      const now=new Date();
+      item.inDate=window.HVSS_FORMAT_DATE ? window.HVSS_FORMAT_DATE(now) : now.toLocaleDateString("id-ID");
+      item.inTime=window.HVSS_FORMAT_TIME ? window.HVSS_FORMAT_TIME(now) : now.toTimeString().slice(0,5);
+      item.returner=receiver;
+      item.securityIn=receiver;
+      item.status="RETURNED";
+      if(window.HVSS_CENTRAL_RETURN){
+        try{
+          await window.HVSS_CENTRAL_RETURN({id:item.id,securityIn:receiver,remark:item.remark||""});
+        }catch(e){
+          alert("Return gagal disimpan ke CENTRAL: "+(e.message||e));
+          item.status="KEY OUT"; item.inDate=""; item.inTime=""; item.returner=""; item.securityIn="";
+          return;
+        }
+      }
+      if(typeof window.HVSS_PERSIST==="function")window.HVSS_PERSIST();
+      if(typeof window.HVSS_AUTO_SYNC==="function")window.HVSS_AUTO_SYNC();
+      if(typeof window.renderAll==="function")window.renderAll();
+      close();
+    };
+  });
+})();
+</script>
+<script id="HVSS_DATE_TIME_HELPERS">
+(function(){
+  const days=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  window.HVSS_FORMAT_DATE=function(d){
+    d=d instanceof Date?d:new Date(d);
+    const dd=String(d.getDate()).padStart(2,"0");
+    const mm=String(d.getMonth()+1).padStart(2,"0");
+    const yy=d.getFullYear();
+    return days[d.getDay()]+", "+dd+"-"+mm+"-"+yy;
+  };
+  window.HVSS_FORMAT_TIME=function(d){
+    d=d instanceof Date?d:new Date(d);
+    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  };
+})();
+</script>
+<script id="HVSS_CENTRAL_RETURN_FN">
+(function(){
+  window.HVSS_CENTRAL_RETURN=async function(p){
+    const C=window.HVSS_CENTRAL;
+    if(!C||!C.gasUrl)throw new Error("Central URL belum tersedia");
+    const r=await fetch(C.gasUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"returnKey",spreadsheetId:C.spreadsheetId,id:p.id,securityIn:p.securityIn,remark:p.remark||""})});
+    const t=await r.text();let d;try{d=JSON.parse(t)}catch(e){throw new Error(t.slice(0,250))}
+    if(!d.ok)throw new Error(d.error||"Central return gagal");
+    return d;
+  };
+})();
+</script></body>
 </html>
