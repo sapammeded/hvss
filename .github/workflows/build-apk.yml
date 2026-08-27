@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'index.html'
       - 'hvss2.html'
       - 'package.json'
       - 'capacitor.config.json'
@@ -29,11 +28,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Prepare web app
+      - name: Prepare HVSS v5 PRO
         run: |
           rm -rf www
           mkdir -p www
-          cp index.html www/index.html
+          cp hvss2.html www/index.html
 
       - name: Install dependencies
         run: npm install
@@ -49,12 +48,12 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk HVSS-Chief-Security.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk HVSS-Chief-Security-v5-PRO.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HVSS-Chief-Security-APK
-          path: HVSS-Chief-Security.apk
+          name: HVSS-Chief-Security-v5-PRO-APK
+          path: HVSS-Chief-Security-v5-PRO.apk
           if-no-files-found: error
           retention-days: 30
