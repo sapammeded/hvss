@@ -1,0 +1,1 @@
+{"name":"hvss-chief-security-global-asset-intelligence","version":"1.0.0","private":true,"scripts":{"build:android":"npx cap sync android && cd android && ./gradlew assembleDebug"},"dependencies":{"@capacitor/android":"7.4.5","@capacitor/core":"7.4.5"},"devDependencies":{"@capacitor/cli":"7.4.5"}}
