@@ -17,8 +17,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Patch hvss2.html
-        shell: python
+        shell: bash
         run: |
+          python3 - <<'PY'
           from pathlib import Path
 
           p = Path('hvss2.html')
@@ -76,10 +77,7 @@ jobs:
   function klEsc(v){return String(v==null?"":v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
   function klDate(v){return String(v==null?"":v).trim().slice(0,10)}
   function klNorm(v){return String(v==null?"":v).trim().toLowerCase()}
-  function klRows(){
-    const db=window.HVSS_DB||{keys:[]};
-    return Array.isArray(db.keys)?db.keys.slice():[];
-  }
+  function klRows(){const db=window.HVSS_DB||{keys:[]};return Array.isArray(db.keys)?db.keys.slice():[]}
   function klInRange(item){
     const from=document.getElementById("keyLogFrom").value||"";
     const to=document.getElementById("keyLogTo").value||"";
@@ -92,61 +90,46 @@ jobs:
     const key=klNorm(document.getElementById("keyLogKey").value);
     return klRows().filter(x=>{
       if(!klInRange(x))return false;
-      if(borrower && !klNorm(x.borrower).includes(borrower))return false;
-      if(key && !(klNorm(x.keyName).includes(key)||klNorm(x.keyNumber).includes(key)))return false;
+      if(borrower&&!klNorm(x.borrower).includes(borrower))return false;
+      if(key&&!(klNorm(x.keyName).includes(key)||klNorm(x.keyNumber).includes(key)))return false;
       return true;
     }).sort((a,b)=>(klDate(b.outDate)+String(b.outTime||"")).localeCompare(klDate(a.outDate)+String(a.outTime||"")));
   }
   function klRender(){
-    const rows=klFiltered(), body=document.getElementById("keyLogBody"), count=document.getElementById("keyLogCount");
+    const rows=klFiltered(),body=document.getElementById("keyLogBody"),count=document.getElementById("keyLogCount");
     count.textContent=rows.length+" transaksi";
     body.innerHTML=rows.length?rows.map((x,i)=>`<tr><td>${i+1}</td><td>${klEsc(x.outDate)}</td><td>${klEsc(x.outTime)}</td><td>${klEsc(x.borrower)}</td><td>${klEsc(x.division)}</td><td>${klEsc(x.security||x.outSecurity)}</td><td>${klEsc(x.keyName)}</td><td>${klEsc(x.keyNumber)}</td><td>${klEsc(x.inDate)}</td><td>${klEsc(x.inTime)}</td><td>${klEsc(x.returner)}</td><td>${klEsc(x.inSecurity||x.securityIn)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td></tr>`).join(""):'<tr><td colspan="13" class="empty">Tidak ada transaksi sesuai filter.</td></tr>';
     return rows;
   }
   async function klLoad(){
-    const b=document.getElementById("keyLogLoad"), st=document.getElementById("keyLogStatus");
+    const b=document.getElementById("keyLogLoad"),st=document.getElementById("keyLogStatus");
     if(!window.HVSS_CENTRAL_PULL){alert("Fungsi CENTRAL belum siap. Refresh halaman lalu coba lagi.");return}
-    b.disabled=true; st.textContent="Mengambil data terbaru dari CENTRAL...";
+    b.disabled=true;st.textContent="Mengambil data terbaru dari CENTRAL...";
     try{
       const r=await window.HVSS_CENTRAL_PULL();
       const n=r&&Array.isArray(r.keys)?r.keys.length:(window.HVSS_DB&&window.HVSS_DB.keys?window.HVSS_DB.keys.length:0);
-      st.textContent="✓ CENTRAL LOADED • "+n+" transaksi Key Loan tersedia.";
-      klRender();
-    }catch(e){
-      st.textContent="✕ Gagal mengambil CENTRAL: "+(e.message||e);
-      alert("Key Loan Log gagal mengambil data CENTRAL: "+(e.message||e));
-    }finally{b.disabled=false}
+      st.textContent="✓ CENTRAL LOADED • "+n+" transaksi Key Loan tersedia.";klRender();
+    }catch(e){st.textContent="✕ Gagal mengambil CENTRAL: "+(e.message||e);alert("Key Loan Log gagal mengambil data CENTRAL: "+(e.message||e))}
+    finally{b.disabled=false}
   }
-  function klData(){
-    return klFiltered().map((x,i)=>[i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||x.outSecurity||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inSecurity||x.securityIn||"",x.inDate?"RETURNED":"KEY OUT"]);
-  }
+  function klData(){return klFiltered().map((x,i)=>[i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||x.outSecurity||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inSecurity||x.securityIn||"",x.inDate?"RETURNED":"KEY OUT"])}
   function klExcel(){
     if(!window.XLSX){alert("Excel engine belum siap. Refresh halaman.");return}
     const data=[["No","Date Out","Time Out","Peminjam","Divisi","Security OUT","Nama Kunci","Key Number","Date In","Time In","Pengembali","Security IN","Status"]].concat(klData());
-    const ws=XLSX.utils.aoa_to_sheet(data), wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"Key Loan Log");
-    XLSX.writeFile(wb,"HVSS_Key_Loan_Log.xlsx");
+    const ws=XLSX.utils.aoa_to_sheet(data),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Key Loan Log");XLSX.writeFile(wb,"HVSS_Key_Loan_Log.xlsx");
   }
   function klPdf(){
     const rows=klFiltered();
     if(!rows.length){alert("Tidak ada data Key Loan sesuai filter.");return}
     if(!window.jspdf||!window.jspdf.jsPDF){alert("PDF engine belum siap. Refresh halaman.");return}
     const doc=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
-    doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("HVSS KEY LOAN LOG",14,15);
-    doc.setFont("helvetica","normal");doc.setFontSize(8);
-    const from=document.getElementById("keyLogFrom").value||"ALL";
-    const to=document.getElementById("keyLogTo").value||"ALL";
-    doc.text("Period: "+from+" to "+to+" • Total: "+rows.length,14,21);
-    doc.autoTable({startY:25,head:[["NO","DATE OUT","TIME OUT","PEMINJAM","DIVISI","SECURITY OUT","KEY","NO. KUNCI","DATE IN","TIME IN","PENGEMBALI","SECURITY IN","STATUS"]],body:klData(),theme:"grid",styles:{font:"helvetica",fontSize:7,cellPadding:2,overflow:"linebreak"},headStyles:{fontStyle:"bold",fontSize:7},margin:{left:10,right:10,bottom:15}});
-    doc.save("HVSS_Key_Loan_Log.pdf");
+    doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("HVSS KEY LOAN LOG",14,15);doc.setFont("helvetica","normal");doc.setFontSize(8);
+    const from=document.getElementById("keyLogFrom").value||"ALL",to=document.getElementById("keyLogTo").value||"ALL";doc.text("Period: "+from+" to "+to+" • Total: "+rows.length,14,21);
+    doc.autoTable({startY:25,head:[["NO","DATE OUT","TIME OUT","PEMINJAM","DIVISI","SECURITY OUT","KEY","NO. KUNCI","DATE IN","TIME IN","PENGEMBALI","SECURITY IN","STATUS"]],body:klData(),theme:"grid",styles:{font:"helvetica",fontSize:7,cellPadding:2,overflow:"linebreak"},headStyles:{fontStyle:"bold",fontSize:7},margin:{left:10,right:10,bottom:15}});doc.save("HVSS_Key_Loan_Log.pdf");
   }
   function klReset(){document.getElementById("keyLogFrom").value="";document.getElementById("keyLogTo").value="";document.getElementById("keyLogBorrower").value="";document.getElementById("keyLogKey").value="";klRender()}
   function klInit(){
-    document.getElementById("keyLogLoad").onclick=klLoad;
-    document.getElementById("keyLogFilter").onclick=klRender;
-    document.getElementById("keyLogClear").onclick=klReset;
-    document.getElementById("keyLogExcel").onclick=klExcel;
-    document.getElementById("keyLogPdf").onclick=klPdf;
+    document.getElementById("keyLogLoad").onclick=klLoad;document.getElementById("keyLogFilter").onclick=klRender;document.getElementById("keyLogClear").onclick=klReset;document.getElementById("keyLogExcel").onclick=klExcel;document.getElementById("keyLogPdf").onclick=klPdf;
     ["keyLogFrom","keyLogTo","keyLogBorrower","keyLogKey"].forEach(id=>document.getElementById(id).addEventListener("change",klRender));
     document.getElementById("tabs").querySelector('[data-page="keylogPage"]').addEventListener("click",function(){setTimeout(klRender,0)});
   }
@@ -157,6 +140,7 @@ jobs:
           s = s.replace('</body>', script + '</body>', 1)
           p.write_text(s, encoding='utf-8')
           print('Patched hvss2.html')
+          PY
 
       - name: Commit patch
         run: |
