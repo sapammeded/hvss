@@ -29,18 +29,26 @@ jobs:
           html=p.read_text(encoding='utf-8')
           bridge=Path('android-gas-bridge.js').read_text(encoding='utf-8')
           prelude='''<script id="hvss-android-datekey-fix">\nfunction dateKey(v){v=String(v==null?"":v).trim();if(!v)return "";var m=v.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);if(m)return v;m=v.match(/^(?:[^,]+,\\s*)?(\\d{1,2})[-\\/](\\d{1,2})[-\\/](\\d{4})$/);return m?m[3]+"-"+String(m[2]).padStart(2,"0")+"-"+String(m[1]).padStart(2,"0"):v;}\n</script>\n'''
+
+          # The Daily Report PDF currently calls the visitor-only PDF mode. Patch only
+          # that handler and add a combined report mode. Existing visitor/key/history
+          # PDF modes and all other application features remain untouched.
+          old='''$("reportPdf").onclick=()=>{renderReport();setTimeout(()=>hvssBuildPdf("visitor"),100)};'''
+          new='''$("reportPdf").onclick=async()=>{\n  try{\n    if(window.HVSS_CENTRAL_PULL) await window.HVSS_CENTRAL_PULL();\n    renderReport();\n    setTimeout(()=>hvssBuildPdf("report"),100);\n  }catch(e){\n    alert("Export PDF gagal mengambil CENTRAL: "+(e.message||e));\n  }\n};'''
+          if old not in html:
+              raise SystemExit('Expected Daily Report PDF handler not found; refusing to build a partial patch')
+          html=html.replace(old,new,1)
+
+          marker='''  if(mode==="visitor"){'''
+          combined='''  if(mode==="report"){\n    pageHeader("DAILY SECURITY REPORT","Reporting Date: "+dateLabel(r.d));\n    summary(40);\n    doc.autoTable({\n      startY:62,\n      head:[["NO","TIME IN","TIME OUT","NAME","COMPANY","ID CARD","PURPOSE / ACTIVITY","AREA","REMARK","STATUS"]],\n      body:r.v.map((x,i)=>[i+1,x.timeIn||"—",x.timeOut||"—",x.name||"—",x.company||"—",x.idcard||"—",x.purpose||"—",x.area||"—",x.remark||"—",x.timeOut?"OUT":"INSIDE"]),\n      theme:"grid",\n      styles:{font:"helvetica",fontSize:7,cellPadding:2,textColor:[35,45,58],lineColor:LINE,lineWidth:.25,overflow:"linebreak"},\n      headStyles:{fillColor:BLUE,textColor:255,fontStyle:"bold",fontSize:7},\n      alternateRowStyles:{fillColor:[250,251,253]},\n      margin:{left:12,right:12,bottom:17},\n      didDrawPage:footer\n    });\n    let nextY=(doc.lastAutoTable&&doc.lastAutoTable.finalY?doc.lastAutoTable.finalY:62)+9;\n    if(nextY>H-45){doc.addPage();pageHeader("DAILY SECURITY REPORT","Reporting Date: "+dateLabel(r.d));nextY=40;}\n    doc.setTextColor(...NAVY);doc.setFont("helvetica","bold");doc.setFontSize(10);\n    doc.text("KEY CONTROL ACTIVITY",12,nextY);\n    doc.autoTable({\n      startY:nextY+4,\n      head:[["NO","OUT","PEMINJAM","DIVISI","SECURITY","NAMA KUNCI","KEY NO.","IN","PENGEMBALI","STATUS"]],\n      body:r.k.map((x,i)=>[i+1,x.outTime||"—",x.borrower||"—",x.division||"—",x.security||"—",x.keyName||"—",x.keyNumber||"—",x.inTime||"—",x.returner||"—",x.inDate?"RETURNED":"KEY OUT"]),\n      theme:"grid",\n      styles:{font:"helvetica",fontSize:7,cellPadding:2,textColor:[35,45,58],lineColor:LINE,lineWidth:.25,overflow:"linebreak"},\n      headStyles:{fillColor:BLUE,textColor:255,fontStyle:"bold",fontSize:7},\n      alternateRowStyles:{fillColor:[250,251,253]},\n      margin:{left:12,right:12,bottom:17},\n      didDrawPage:footer\n    });\n    doc.save("HVSS_Daily_Report_"+r.d+".pdf");\n    return;\n  }\n\n'''
+          if marker not in html:
+              raise SystemExit('Expected hvssBuildPdf visitor marker not found; refusing to build a partial patch')
+          html=html.replace(marker,combined+marker,1)
+
           marker='</head>'
           injection=prelude+'<script>\n'+bridge+'\n</script>\n'
           if marker not in html: raise SystemExit('HVSS HTML missing </head> marker')
           html=html.replace(marker,injection+marker,1)
-
-          # IMPORTANT: keep hvss2.html itself unchanged. The PDF fix is injected only
-          # into the Android build artifact. Export PDF must use CENTRAL as source of truth,
-          # exactly like the existing Excel export path.
-          pdf_patch='''<script id="hvss-pdf-central-export-fix">\n(function(){\n  function install(){\n    if(typeof window.hvssBuildPdf!=="function" || typeof window.HVSS_CENTRAL_PULL!=="function") return false;\n    if(window.__HVSS_PDF_CENTRAL_PATCHED__) return true;\n    var original=window.hvssBuildPdf;\n    window.hvssBuildPdf=async function(mode){\n      try{\n        await window.HVSS_CENTRAL_PULL();\n      }catch(e){\n        alert("Export PDF dibatalkan: gagal mengambil data CENTRAL.\");\n        console.error("HVSS PDF CENTRAL pull failed",e);\n        return;\n      }\n      return original(mode);\n    };\n    window.__HVSS_PDF_CENTRAL_PATCHED__=true;\n    return true;\n  }\n  var timer=setInterval(function(){if(install())clearInterval(timer);},50);\n  setTimeout(function(){clearInterval(timer);install();},15000);\n})();\n</script>\n'''
-          body_marker='</body>'
-          if body_marker not in html: raise SystemExit('HVSS HTML missing </body> marker')
-          html=html.replace(body_marker,pdf_patch+body_marker,1)
           p.write_text(html,encoding='utf-8')
           PY
 
