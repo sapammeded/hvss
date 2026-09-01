@@ -86,3 +86,6 @@ jobs:
           path: HVSS-Chief-Security-v5-PRO.apk
           if-no-files-found: error
           retention-days: 30
+
+# Force a fresh APK build from the current hvss2.html baseline so the Key Loan Log
+# already present in the source is included in the installable APK.
