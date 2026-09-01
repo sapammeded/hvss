@@ -1,75 +1,63 @@
 name: Apply Key Loan Log Patch
 
-on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/apply-key-loan-log.yml'
+on: push
 
 permissions:
   contents: write
 
 jobs:
   patch:
-    if: "${{ !contains(github.event.head_commit.message, 'feat: add Key Loan Log') }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Patch hvss2.html
-        shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('hvss2.html')
-          s = p.read_text(encoding='utf-8')
+          p=Path('hvss2.html')
+          s=p.read_text(encoding='utf-8')
           if 'id="keylogPage"' in s:
               print('Key Loan Log already present; nothing to do.')
               raise SystemExit(0)
-          old_tab = '<button type="button" class="tab" data-page="key">Key Loan</button>'
-          new_tab = old_tab + '\n  <button type="button" class="tab" data-page="keylogPage">Key Loan Log</button>'
-          if old_tab not in s: raise SystemExit('TAB marker not found')
-          s = s.replace(old_tab, new_tab, 1)
-          marker = '<section class="page" id="history">'
+          old='<button type="button" class="tab" data-page="key">Key Loan</button>'
+          new=old+'\n  <button type="button" class="tab" data-page="keylogPage">Key Loan Log</button>'
+          if old not in s: raise SystemExit('TAB marker not found')
+          s=s.replace(old,new,1)
+          marker='<section class="page" id="history">'
           if marker not in s: raise SystemExit('HISTORY marker not found')
-          section = r'''<section class="page" id="keylogPage">
+          section=r'''<section class="page" id="keylogPage">
  <div class="card">
-  <div class="head"><div><h2>Key Loan Log</h2><div class="muted">Riwayat Key Loan dari CENTRAL / Google Spreadsheet</div></div>
-   <div class="actions no-print" style="margin:0"><button type="button" class="btn primary" id="keyLogLoad">Ambil Data CENTRAL</button><button type="button" class="btn dark" id="keyLogExcel">Export Excel</button><button type="button" class="btn success" id="keyLogPdf">Export PDF</button></div></div>
+  <div class="head"><div><h2>Key Loan Log</h2><div class="muted">Riwayat Key Loan dari CENTRAL / Google Spreadsheet</div></div><div class="actions no-print" style="margin:0"><button type="button" class="btn primary" id="keyLogLoad">Ambil Data CENTRAL</button><button type="button" class="btn dark" id="keyLogExcel">Export Excel</button><button type="button" class="btn success" id="keyLogPdf">Export PDF</button></div></div>
   <div class="notice">Pencarian mengambil data terbaru dari CENTRAL. Data lama tetap dapat dicari selama record masih ada di Spreadsheet, termasuk data bertahun-tahun lalu.</div>
   <div class="formgrid"><div class="field"><label>Dari Tanggal</label><input id="keyLogFrom" type="date"></div><div class="field"><label>Sampai Tanggal</label><input id="keyLogTo" type="date"></div><div class="field"><label>Nama Peminjam</label><input id="keyLogBorrower" placeholder="Semua peminjam"></div><div class="field"><label>Nama / Nomor Kunci</label><input id="keyLogKey" placeholder="Semua kunci"></div></div>
   <div class="actions"><button type="button" class="btn secondary" id="keyLogFilter">Terapkan Filter</button><button type="button" class="btn secondary" id="keyLogClear">Reset Filter</button></div>
   <div class="muted" id="keyLogStatus" style="margin-top:10px">Belum mengambil data CENTRAL.</div>
  </div>
- <div class="card"><div class="head"><h2>Riwayat Transaksi</h2><div class="muted" id="keyLogCount">0 transaksi</div></div>
-  <div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>Date Out</th><th>Time Out</th><th>Peminjam</th><th>Divisi</th><th>Security OUT</th><th>Key</th><th>No. Kunci</th><th>Date In</th><th>Time In</th><th>Pengembali</th><th>Security IN</th><th>Status</th></tr></thead><tbody id="keyLogBody"><tr><td colspan="13" class="empty">Tekan “Ambil Data CENTRAL” untuk mengambil history.</td></tr></tbody></table></div>
- </div>
+ <div class="card"><div class="head"><h2>Riwayat Transaksi</h2><div class="muted" id="keyLogCount">0 transaksi</div></div><div class="tablewrap"><table class="table"><thead><tr><th>No</th><th>Date Out</th><th>Time Out</th><th>Peminjam</th><th>Divisi</th><th>Security OUT</th><th>Key</th><th>No. Kunci</th><th>Date In</th><th>Time In</th><th>Pengembali</th><th>Security IN</th><th>Status</th></tr></thead><tbody id="keyLogBody"><tr><td colspan="13" class="empty">Tekan “Ambil Data CENTRAL” untuk mengambil history.</td></tr></tbody></table></div></div>
 </section>
 
 '''
-          s = s.replace(marker, section + marker, 1)
-          script = r'''<script id="HVSS_KEY_LOAN_LOG">
-(function(){
-"use strict";
-function klEsc(v){return String(v==null?"":v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function klDate(v){return String(v==null?"":v).trim().slice(0,10)}
-function klNorm(v){return String(v==null?"":v).trim().toLowerCase()}
-function klRows(){const db=window.HVSS_DB||{keys:[]};return Array.isArray(db.keys)?db.keys.slice():[]}
-function klInRange(x){const f=document.getElementById("keyLogFrom").value||"",t=document.getElementById("keyLogTo").value||"";const ds=[klDate(x.outDate),klDate(x.inDate)].filter(Boolean);return ds.length&&ds.some(d=>(!f||d>=f)&&(!t||d<=t))}
-function klFiltered(){const b=klNorm(document.getElementById("keyLogBorrower").value),k=klNorm(document.getElementById("keyLogKey").value);return klRows().filter(x=>klInRange(x)&&(!b||klNorm(x.borrower).includes(b))&&(!k||(klNorm(x.keyName).includes(k)||klNorm(x.keyNumber).includes(k)))).sort((a,b)=>(klDate(b.outDate)+String(b.outTime||"")).localeCompare(klDate(a.outDate)+String(a.outTime||"")))}
-function klRender(){const r=klFiltered(),body=document.getElementById("keyLogBody");document.getElementById("keyLogCount").textContent=r.length+" transaksi";body.innerHTML=r.length?r.map((x,i)=>`<tr><td>${i+1}</td><td>${klEsc(x.outDate)}</td><td>${klEsc(x.outTime)}</td><td>${klEsc(x.borrower)}</td><td>${klEsc(x.division)}</td><td>${klEsc(x.security||x.outSecurity)}</td><td>${klEsc(x.keyName)}</td><td>${klEsc(x.keyNumber)}</td><td>${klEsc(x.inDate)}</td><td>${klEsc(x.inTime)}</td><td>${klEsc(x.returner)}</td><td>${klEsc(x.inSecurity||x.securityIn)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td></tr>`).join(""):'<tr><td colspan="13" class="empty">Tidak ada transaksi sesuai filter.</td></tr>';return r}
-async function klLoad(){const b=document.getElementById("keyLogLoad"),st=document.getElementById("keyLogStatus");if(!window.HVSS_CENTRAL_PULL){alert("Fungsi CENTRAL belum siap. Refresh halaman lalu coba lagi.");return}b.disabled=true;st.textContent="Mengambil data terbaru dari CENTRAL...";try{const r=await window.HVSS_CENTRAL_PULL();const n=r&&Array.isArray(r.keys)?r.keys.length:(window.HVSS_DB&&window.HVSS_DB.keys?window.HVSS_DB.keys.length:0);st.textContent="✓ CENTRAL LOADED • "+n+" transaksi Key Loan tersedia.";klRender()}catch(e){st.textContent="✕ Gagal mengambil CENTRAL: "+(e.message||e);alert("Key Loan Log gagal mengambil data CENTRAL: "+(e.message||e))}finally{b.disabled=false}}
-function klData(){return klFiltered().map((x,i)=>[i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||x.outSecurity||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inSecurity||x.securityIn||"",x.inDate?"RETURNED":"KEY OUT"])}
-function klExcel(){if(!window.XLSX){alert("Excel engine belum siap. Refresh halaman.");return}const d=[["No","Date Out","Time Out","Peminjam","Divisi","Security OUT","Nama Kunci","Key Number","Date In","Time In","Pengembali","Security IN","Status"]].concat(klData()),w=XLSX.utils.aoa_to_sheet(d),b=XLSX.utils.book_new();XLSX.utils.book_append_sheet(b,w,"Key Loan Log");XLSX.writeFile(b,"HVSS_Key_Loan_Log.xlsx")}
-function klPdf(){const r=klFiltered();if(!r.length){alert("Tidak ada data Key Loan sesuai filter.");return}if(!window.jspdf||!window.jspdf.jsPDF){alert("PDF engine belum siap. Refresh halaman.");return}const d=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4"});d.setFont("helvetica","bold");d.setFontSize(15);d.text("HVSS KEY LOAN LOG",14,15);d.setFont("helvetica","normal");d.setFontSize(8);const f=document.getElementById("keyLogFrom").value||"ALL",t=document.getElementById("keyLogTo").value||"ALL";d.text("Period: "+f+" to "+t+" • Total: "+r.length,14,21);d.autoTable({startY:25,head:[["NO","DATE OUT","TIME OUT","PEMINJAM","DIVISI","SECURITY OUT","KEY","NO. KUNCI","DATE IN","TIME IN","PENGEMBALI","SECURITY IN","STATUS"]],body:klData(),theme:"grid",styles:{font:"helvetica",fontSize:7,cellPadding:2,overflow:"linebreak"},headStyles:{fontStyle:"bold",fontSize:7},margin:{left:10,right:10,bottom:15}});d.save("HVSS_Key_Loan_Log.pdf")}
-function klReset(){["keyLogFrom","keyLogTo","keyLogBorrower","keyLogKey"].forEach(id=>document.getElementById(id).value="");klRender()}
-function klInit(){document.getElementById("keyLogLoad").onclick=klLoad;document.getElementById("keyLogFilter").onclick=klRender;document.getElementById("keyLogClear").onclick=klReset;document.getElementById("keyLogExcel").onclick=klExcel;document.getElementById("keyLogPdf").onclick=klPdf;["keyLogFrom","keyLogTo","keyLogBorrower","keyLogKey"].forEach(id=>document.getElementById(id).addEventListener("change",klRender));document.getElementById("tabs").querySelector('[data-page="keylogPage"]').addEventListener("click",()=>setTimeout(klRender,0))}
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",klInit);else klInit();
+          s=s.replace(marker,section+marker,1)
+          script=r'''<script id="HVSS_KEY_LOAN_LOG">
+(function(){"use strict";
+function e(v){return String(v==null?"":v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function d(v){return String(v==null?"":v).trim().slice(0,10)}
+function n(v){return String(v==null?"":v).trim().toLowerCase()}
+function all(){const x=window.HVSS_DB||{};return Array.isArray(x.keys)?x.keys.slice():[]}
+function filtered(){const f=document.getElementById("keyLogFrom").value||"",t=document.getElementById("keyLogTo").value||"",b=n(document.getElementById("keyLogBorrower").value),k=n(document.getElementById("keyLogKey").value);return all().filter(x=>{const ds=[d(x.outDate),d(x.inDate)].filter(Boolean);return ds.some(z=>(!f||z>=f)&&(!t||z<=t))&&(!b||n(x.borrower).includes(b))&&(!k||(n(x.keyName).includes(k)||n(x.keyNumber).includes(k)))}).sort((a,b)=>(d(b.outDate)+String(b.outTime||"")).localeCompare(d(a.outDate)+String(a.outTime||"")))}
+function render(){const r=filtered();document.getElementById("keyLogCount").textContent=r.length+" transaksi";document.getElementById("keyLogBody").innerHTML=r.length?r.map((x,i)=>`<tr><td>${i+1}</td><td>${e(x.outDate)}</td><td>${e(x.outTime)}</td><td>${e(x.borrower)}</td><td>${e(x.division)}</td><td>${e(x.security||x.outSecurity)}</td><td>${e(x.keyName)}</td><td>${e(x.keyNumber)}</td><td>${e(x.inDate)}</td><td>${e(x.inTime)}</td><td>${e(x.returner)}</td><td>${e(x.inSecurity||x.securityIn)}</td><td><span class="badge ${x.inDate?"in":"out"}">${x.inDate?"RETURNED":"KEY OUT"}</span></td></tr>`).join(""):'<tr><td colspan="13" class="empty">Tidak ada transaksi sesuai filter.</td></tr>';return r}
+async function load(){const b=document.getElementById("keyLogLoad"),s=document.getElementById("keyLogStatus");b.disabled=true;s.textContent="Mengambil data terbaru dari CENTRAL...";try{if(!window.HVSS_CENTRAL_PULL)throw Error("CENTRAL belum siap");const r=await window.HVSS_CENTRAL_PULL();s.textContent="✓ CENTRAL LOADED • "+((r&&r.keys)||[]).length+" transaksi Key Loan tersedia.";render()}catch(x){s.textContent="✕ "+(x.message||x);alert("Key Loan Log gagal mengambil CENTRAL: "+(x.message||x))}finally{b.disabled=false}}
+function rows(){return filtered().map((x,i)=>[i+1,x.outDate||"",x.outTime||"",x.borrower||"",x.division||"",x.security||x.outSecurity||"",x.keyName||"",x.keyNumber||"",x.inDate||"",x.inTime||"",x.returner||"",x.inSecurity||x.securityIn||"",x.inDate?"RETURNED":"KEY OUT"])}
+function excel(){if(!window.XLSX)return alert("Excel engine belum siap. Refresh halaman.");const a=[["No","Date Out","Time Out","Peminjam","Divisi","Security OUT","Nama Kunci","Key Number","Date In","Time In","Pengembali","Security IN","Status"]].concat(rows()),w=XLSX.utils.aoa_to_sheet(a),b=XLSX.utils.book_new();XLSX.utils.book_append_sheet(b,w,"Key Loan Log");XLSX.writeFile(b,"HVSS_Key_Loan_Log.xlsx")}
+function pdf(){const r=filtered();if(!r.length)return alert("Tidak ada data Key Loan sesuai filter.");if(!window.jspdf||!window.jspdf.jsPDF)return alert("PDF engine belum siap. Refresh halaman.");const x=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4"});x.setFontSize(15);x.text("HVSS KEY LOAN LOG",14,15);x.setFontSize(8);x.text("Total: "+r.length,14,21);x.autoTable({startY:25,head:[["NO","DATE OUT","TIME OUT","PEMINJAM","DIVISI","SECURITY OUT","KEY","NO. KUNCI","DATE IN","TIME IN","PENGEMBALI","SECURITY IN","STATUS"]],body:rows(),theme:"grid",styles:{fontSize:7,cellPadding:2,overflow:"linebreak"},headStyles:{fontStyle:"bold",fontSize:7},margin:{left:10,right:10,bottom:15}});x.save("HVSS_Key_Loan_Log.pdf")}
+function init(){document.getElementById("keyLogLoad").onclick=load;document.getElementById("keyLogFilter").onclick=render;document.getElementById("keyLogClear").onclick=()=>{["keyLogFrom","keyLogTo","keyLogBorrower","keyLogKey"].forEach(i=>document.getElementById(i).value="");render()};document.getElementById("keyLogExcel").onclick=excel;document.getElementById("keyLogPdf").onclick=pdf;["keyLogFrom","keyLogTo","keyLogBorrower","keyLogKey"].forEach(i=>document.getElementById(i).addEventListener("change",render));render()}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 </script>
 '''
-          s = s.replace('</body>', script + '</body>', 1)
-          p.write_text(s, encoding='utf-8')
+          s=s.replace('</body>',script+'</body>',1)
+          p.write_text(s,encoding='utf-8')
           PY
 
       - name: Commit patch
@@ -77,6 +65,6 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add hvss2.html
-          git diff --cached --quiet && { echo "No changes to commit"; exit 0; }
+          git diff --cached --quiet && exit 0
           git commit -m "feat: add Key Loan Log"
           git push
